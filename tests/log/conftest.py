@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-"""This is the example module.
+"""This is the configuration file containing the test data for the test module Log.
 
-This module does stuff.
 """
 
 
 from opyenxes.factory.XFactory import XFactory
+from opyenxes.model.XEvent import XEvent
 from opyenxes.extension.XExtensionManager import XExtensionManager
 import math, pytest
 
@@ -55,25 +55,37 @@ EVENT_NAME_GENERATOR = generate_event_name()
 
 
 EVENTS = []
+LIFECYCLES = [
+    'schedule',
+    'start',
+    'complete'
+]
+GROUPS = [
+    'Developer',
+    'Tester',
+    'Architect'
+]
 for i in range(3):
     event = XFactory.create_event()
     timestamp = XFactory.create_attribute_timestamp('date', i + 1)
     event.get_attributes()['time:timestamp'] = timestamp
     CONCEPT_EXT.assign_name(event, next(EVENT_NAME_GENERATOR))
-    LIFECYCLE_EXT.assign_standard_transition(event, 'start')
-    ORGANIZATIONAL_EXT.assign_group(event, 'Group Developer')
+    lifecycle = XFactory.create_attribute_literal('lifecycle:transition', LIFECYCLES[i])
+    event.get_attributes()['lifecycle:transition'] = lifecycle
+    ORGANIZATIONAL_EXT.assign_group(event, GROUPS[i])
     EVENTS.append(event)
 
 
-def id_func(event):
-    name = XExtensionManager().get_by_name('Concept').extract_name(event)
-    timestamp = XExtensionManager().get_by_name('Time').extract_timestamp(event)
+def id_func(fixture_value):
+    concept = XExtensionManager().get_by_name('Concept').extract_name(fixture_value)
+    timestamp = XExtensionManager().get_by_name('Time').extract_timestamp(fixture_value)
     attributes = ''
-    for name, val in event.get_attributes():
+    for name in sorted(fixture_value.get_attributes().keys()):
+        val = fixture_value.get_attributes()[name]
         if 'concept:name' in name or 'time:timestamp' in name:
             continue
-        attributes = attributes + ', ' + val if attributes != '' else val
-    e = 'XEvent({}, {}, {})'.format(name, timestamp, attributes)
+        attributes = attributes + ', ' + val.get_value() if attributes != '' else val.get_value()
+    e = 'XEvent({}, {}, {})'.format(concept, timestamp, attributes)
     return e
 
 
@@ -81,4 +93,5 @@ def id_func(event):
 @pytest.fixture(scope='function', params=EVENTS, ids=id_func)
 def an_event(request):
     return request.param
+
 
