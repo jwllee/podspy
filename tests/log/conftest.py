@@ -12,6 +12,10 @@ from opyenxes.out.XesXmlGZIPSerializer import XesXmlGZIPSerializer
 import math, pytest
 from random import randint
 import numpy as np
+import pandas as pd
+from collections import defaultdict as ddict
+from podspy.log.storage import *
+from podspy.log import utils
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -61,28 +65,27 @@ def test_event_name_generator():
 
 EVENT_NAME_GENERATOR = generate_event_name()
 
-LOG_ROWS = []
+LOG = XFactory.create_log()
 LOG_ATTR_KEYS = [
-    'concept:name',
-    'time:total'
+    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
+    (EventStorageFactory.CONTINUOUS, 'time:total', 'time:total', None)
 ]
 
 NB_TRACES = 3
 TRACES = []
-TRACE_ROWS = []
 TRACE_ATTR_KEYS = [
-    'concept:name',
-    'cost:total'
+    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
+    (EventStorageFactory.CONTINUOUS, 'cost:total', 'cost:total', None)
 ]
 
 NB_EVENTS = 3
 EVENTS = []
-EVENT_ROWS = []
 EVENT_ATTR_KEYS = [
-    'concept:name',
-    'lifecycle:transition',
-    'org:group',
-    'time:timestamp'
+    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
+    (EventStorageFactory.CONTINUOUS, 'cost:unit', 'cost:unit', None),
+    (EventStorageFactory.LITERAL, 'lifecycle:transition', 'lifecycle:transition', None),
+    (EventStorageFactory.LITERAL, 'org:group', 'org:group', None),
+    (EventStorageFactory.TIMESTAMP, 'time:timestamp', 'time:timestamp', None)
 ]
 LIFECYCLES = [
     'schedule',
@@ -98,20 +101,29 @@ GROUPS = [
 log_name = 'Test log'
 total_time = 100
 total_time_attr = XFactory.create_attribute_continuous('time:total', total_time)
-LOG = XFactory.create_log()
 CONCEPT_EXT.assign_name(LOG, log_name)
 LOG.get_attributes()['time:total'] = total_time_attr
 
+# create dicts for making expected dataframes
+LOG_COL_DICT = {}
+TRACE_COL_DICT = ddict(list)
+
+EVENT_DF_LIST = []
+
 for i in range(NB_TRACES):
     trace = XFactory.create_trace()
-    trace_rows = []
+    event_col_dict = ddict(list)
     caseid = str(i)
 
     CONCEPT_EXT.assign_name(trace, caseid)
-    total_cost = randint(0, i * 1000)
+    total_cost = randint(0, i * 1000) * 1.
     total_cost_attr = XFactory.create_attribute_continuous('cost:total', total_cost)
 
     trace.get_attributes()['cost:total'] = total_cost_attr
+
+    # update the column dict on the trace level
+    TRACE_COL_DICT['concept:name'].append(caseid)
+    TRACE_COL_DICT['cost:total'].append(total_cost)
 
     for j in range(NB_EVENTS):
         event = XFactory.create_event()
@@ -122,46 +134,45 @@ for i in range(NB_TRACES):
         lifecycle = np.random.choice(LIFECYCLES)
         lifecycle_attr = XFactory.create_attribute_literal('lifecycle:transition', lifecycle)
         group = np.random.choice(GROUPS)
+        unit_cost = randint(0, i * 100) * 1.0
+        unit_cost_attr = XFactory.create_attribute_continuous('cost:unit', unit_cost)
 
         CONCEPT_EXT.assign_name(event, activity)
         ORGANIZATIONAL_EXT.assign_group(event, group)
         event.get_attributes()['time:timestamp'] = timestamp_attr
         event.get_attributes()['lifecycle:transition'] = lifecycle_attr
+        event.get_attributes()['cost:unit'] = unit_cost_attr
 
-        event_row = ((caseid, activity, timestamp), (activity, lifecycle, group, timestamp))
-        trace_row = ((caseid, activity, timestamp), (caseid, total_cost),
-                     (activity, lifecycle, group, timestamp))
-        log_row = (caseid, activity, timestamp,
-                   # log attributes
-                   log_name, total_time,
-                   # trace attributes
-                   caseid, total_cost,
-                   # event attributes
-                   activity, lifecycle, group, timestamp)
+        # update the event column dict
+        event_col_dict[EventStorageFactory.CASEID].append(caseid)
+        event_col_dict[EventStorageFactory.ACTIVITY].append(activity)
+        event_col_dict['concept:name'].append(activity)
+        event_col_dict['time:timestamp'].append(timestamp)
+        event_col_dict['lifecycle:transition'].append(lifecycle)
+        event_col_dict['org:group'].append(group)
+        event_col_dict['cost:unit'].append(unit_cost)
 
         EVENTS.append((caseid, event))
-        EVENT_ROWS.append(event_row)
 
         trace.append(event)
-        trace_rows.append(trace_row)
 
-        LOG_ROWS.append(log_row)
+    # create event df for this trace
+    columns = [EventStorageFactory.CASEID, EventStorageFactory.ACTIVITY,
+               'concept:name', 'cost:unit', 'lifecycle:transition', 'org:group',
+               'time:timestamp']
+    event_df = pd.DataFrame(event_col_dict, columns=columns)
+
+    utils.optimize_df_dtypes(event_df)
+
+    EVENT_DF_LIST.append(event_df)
 
     TRACES.append(trace)
-    TRACE_ROWS.append(trace_rows)
     LOG.append(trace)
 
-
-# store the log in a temporary test data directory
-@pytest.fixture(scope='module')
-def test_log(tmpdir_factory):
-    file = tmpdir_factory.mktemp('data').join('test_log.xes.gz')
-    print('test log file: {}'.format(file))
-
-    with file.open('w') as f:
-        XesXmlGZIPSerializer.serialize(LOG, file)
-
-    return file
+# make the trace df
+columns = ['concept:name', 'cost:total']
+TRACE_DF = pd.DataFrame(TRACE_COL_DICT, columns=columns)
+utils.optimize_df_dtypes(TRACE_DF)
 
 
 def id_func(fixture_value):
@@ -179,31 +190,40 @@ def id_func(fixture_value):
 
 # create fixtures
 @pytest.fixture(scope='function')
-def event_attr_keys():
+def event_attr_list():
     return EVENT_ATTR_KEYS
 
 
 @pytest.fixture(scope='function')
-def trace_attr_keys():
+def trace_attr_list():
     return TRACE_ATTR_KEYS
 
 
 @pytest.fixture(scope='function')
-def log_attr_keys():
+def log_attr_list():
     return LOG_ATTR_KEYS
 
 
-@pytest.fixture(scope='function', params=zip(EVENTS, EVENT_ROWS), ids=lambda item: id_func(item[0][1]))
-def an_event_and_row(request):
+@pytest.fixture(scope='function', params=EVENTS, ids=lambda item: id_func(item[0][1]))
+def an_event(request):
     return request.param
 
 
-@pytest.fixture(scope='function', params=zip(TRACES, TRACE_ROWS), ids=lambda item: id_func(item[0]))
-def a_trace_and_rows(request):
+@pytest.fixture(scope='function', params=zip(TRACES, EVENT_DF_LIST),
+                ids=lambda item: id_func(item[0]))
+def a_trace_and_df(request):
     return request.param
+
+
+@pytest.fixture(scope='function', ids=lambda item: id_func(item[0]))
+def traces_and_df():
+    return (LOG, TRACE_DF)
 
 
 @pytest.fixture(scope='function')
-def a_log_and_rows():
-    return (LOG, LOG_ROWS)
+def log_and_event_df():
+    df = pd.concat(EVENT_DF_LIST)
+    utils.optimize_df_dtypes(df)
+    return (LOG, df)
+
 
