@@ -129,6 +129,7 @@ class EventStorageFactory:
             event_df_i = self.trace_events2df(trace, caseid, event_attribute_list, clf)
             event_df_list.append(event_df_i)
         event_df = pd.concat(event_df_list, axis=0)
+        event_df = event_df.reset_index(drop=True)
 
         utils.optimize_df_dtypes(event_df)
 
