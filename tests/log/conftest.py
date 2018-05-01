@@ -1,229 +1,239 @@
 #!/usr/bin/env python
 
-"""This is the configuration file containing the test data for the test module Log.
 
-"""
-
+from datetime import datetime as dt
+from podspy.log.storage import *
+import pandas as pd
+import pytest
+import functools as fts
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.extension.XExtensionManager import XExtensionManager
-from opyenxes.classification.XEventNameClassifier import XEventNameClassifier
-from opyenxes.out.XesXmlGZIPSerializer import XesXmlGZIPSerializer
-import math, pytest
-from random import randint
-import numpy as np
-import pandas as pd
-from collections import defaultdict as ddict
-from podspy.log.storage import *
-from podspy.log import utils
+from opyenxes.model.XAttributable import XAttributable
+
+EXTENSION_MANAGER = XExtensionManager()
+CONCEPT_EXTENSION = EXTENSION_MANAGER.get_by_name('Concept')
 
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 
-MANAGER = XExtensionManager()
-CONCEPT_EXT = MANAGER.get_by_name('Concept')
-TIME_EXT = MANAGER.get_by_name('Time')
-LIFECYCLE_EXT = MANAGER.get_by_name('Lifecycle')
-ORGANIZATIONAL_EXT = MANAGER.get_by_name('Organizational')
-COST_EXT = MANAGER.get_by_name('Cost')
 
-
-@pytest.fixture(scope='session')
-def name_clf():
-    return XEventNameClassifier()
-
-
-def generate_event_name():
-    count = 0
-    while True:
-        activity = ''
-        aux = count
-        max_power = int(math.log(aux, 26)) if count > 0 else 0
-        for power in range(max_power, 0, -1):
-            # we treat 1 as B
-            multiple = aux // (26 ** power)
-            # need to add padding to be in ASCII range where ord(A) = 65
-            char = chr(multiple + 65)
-            activity = activity + str(char)
-            # update the aux
-            aux = aux - (multiple * (26 ** power))
-        # count < 26
-        activity = activity + str(chr(aux + 65))
-        yield 'Activity {}'.format(activity)
-        count += 1
-
-
-def test_event_name_generator():
-    generator = generate_event_name()
-    assert next(generator) == 'Activity A'
-    assert next(generator) == 'Activity B'
-    for i in range(674):
-        next(generator)
-    assert next(generator) == 'Activity BAA'
-
-
-EVENT_NAME_GENERATOR = generate_event_name()
-
-LOG = XFactory.create_log()
-LOG_ATTR_KEYS = [
+# log attributes
+log_attributes = [
     (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
     (EventStorageFactory.CONTINUOUS, 'time:total', 'time:total', None)
 ]
 
-NB_TRACES = 3
-TRACES = []
-TRACE_ATTR_KEYS = [
+
+# trace attributes
+trace_attributes = [
     (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
     (EventStorageFactory.CONTINUOUS, 'cost:total', 'cost:total', None)
 ]
 
-NB_EVENTS = 3
-EVENTS = []
-EVENT_ATTR_KEYS = [
+
+# event attributes
+event_attributes = [
     (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
     (EventStorageFactory.CONTINUOUS, 'cost:unit', 'cost:unit', None),
     (EventStorageFactory.LITERAL, 'lifecycle:transition', 'lifecycle:transition', None),
     (EventStorageFactory.LITERAL, 'org:group', 'org:group', None),
     (EventStorageFactory.TIMESTAMP, 'time:timestamp', 'time:timestamp', None)
 ]
-LIFECYCLES = [
-    'schedule',
-    'start',
-    'complete'
-]
-GROUPS = [
-    'Developer',
-    'Tester',
-    'Architect'
+
+# column order:
+#   1) caseid
+#   2) activity
+#   3) concept:name
+#   4) cost:unit
+#   5) lifecyle:transition
+#   6) org:group
+#   7) time:timestamp
+event_df_columns = [ EventStorageFactory.CASEID, EventStorageFactory.ACTIVITY, 'concept:name', 'cost:unit',
+                     'lifecycle:transition', 'org:group', 'time:timestamp' ]
+events = [
+    # case id: 1
+    ['1', 'Check stock availability', 'Check stock availability', 0.0, 'start', 'warehouse', dt(year=2017, month=1, day=1, hour=8, minute=0, second=0)],
+    ['1', 'Check stock availability', 'Check stock availability', 0.0, 'complete', 'warehouse', dt(year=2017, month=1, day=1, hour=8, minute=0, second=0)],
+    ['1', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'start', 'transport', dt(year=2017, month=1, day=2, hour=8, minute=0, second=0)],
+    ['1', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'complete', 'transport', dt(year=2017, month=1, day=2, hour=15, minute=0, second=0)],
+    ['1', 'Confirm order', 'Confirm order', 0.0, 'start', 'sales', dt(year=2017, month=1, day=3, hour=8, minute=0, second=0)],
+    ['1', 'Confirm order', 'Confirm order', 0.0, 'complete', 'sales', dt(year=2017, month=1, day=3, hour=8, minute=0, second=0)],
+    ['1', 'Get shipping address', 'Get shipping address', 0.0, 'start', 'sales', dt(year=2017, month=1, day=3, hour=12, minute=0, second=0)],
+    ['1', 'Get shipping address', 'Get shipping address', 0.0, 'complete', 'sales', dt(year=2017, month=1, day=3, hour=12, minute=10, second=0)],
+    ['1', 'Ship product', 'Ship product', 0.0, 'start', 'transport', dt(year=2017, month=1, day=4, hour=8, minute=0, second=0)],
+    ['1', 'Ship product', 'Ship product', 100.0, 'complete', 'transport', dt(year=2017, month=1, day=4, hour=15, minute=0, second=0)],
+    ['1', 'Emit invoice', 'Emit invoice', 0.0, 'start', 'sales', dt(year=2017, month=1, day=3, hour=12, minute=15, second=0)],
+    ['1', 'Emit invoice', 'Emit invoice', 0.0, 'complete', 'sales', dt(year=2017, month=1, day=3, hour=12, minute=15, second=0)],
+    ['1', 'Receive payment', 'Receive payment', 0.0, 'start', 'sales', dt(year=2017, month=1, day=5, hour=8, minute=0, second=0)],
+    ['1', 'Receive payment', 'Receive payment', 0.0, 'complete', 'sales', dt(year=2017, month=1, day=5, hour=8, minute=0, second=0)],
+    ['1', 'Archive order', 'Archive order', 0.0, 'start', 'sales', dt(year=2017, month=1, day=5, hour=8, minute=10, second=0)],
+    ['1', 'Archive order', 'Archive order', 0.0, 'complete', 'sales', dt(year=2017, month=1, day=5, hour=8, minute=15, second=0)],
+    # case id: 2
+    ['2', 'Check stock availability', 'Check stock availability', 0.0, 'start', 'warehouse', dt(year=2017, month=2, day=1, hour=8, minute=0, second=0)],
+    ['2', 'Check stock availability', 'Check stock availability', 0.0, 'complete', 'warehouse', dt(year=2017, month=2, day=1, hour=8, minute=0, second=0)],
+    ['2', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'start', 'transport', dt(year=2017, month=2, day=2, hour=8, minute=0, second=0)],
+    ['2', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'complete', 'transport', dt(year=2017, month=2, day=2, hour=15, minute=0, second=0)],
+    ['2', 'Check raw materials availability', 'Check raw materials availability', 0.0, 'start', 'warehouse', dt(year=2017, month=2, day=3, hour=8, minute=0, second=0)],
+    ['2', 'Check raw materials availability', 'Check raw materials availability', 0.0, 'complete', 'warehouse', dt(year=2017, month=2, day=3, hour=8, minute=30, second=0)],
+    ['2', 'Request raw materials from supplier 1', 'Request raw materials from supplier 1', 0.0, 'start', 'warehouse', dt(year=2017, month=2, day=3, hour=9, minute=0, second=0)],
+    ['2', 'Request raw materials from supplier 1', 'Request raw materials from supplier 1', 0.0, 'complete', 'warehouse', dt(year=2017, month=2, day=3, hour=9, minute=5, second=0)],
+    ['2', 'Obtain raw materials from supplier 1', 'Obtain raw materials from supplier 1', 0.0, 'start', 'warehouse', dt(year=2017, month=2, day=5, hour=8, minute=5, second=0)],
+    ['2', 'Obtain raw materials from supplier 1', 'Obtain raw materials from supplier 1', 200.0, 'complete', 'warehouse', dt(year=2017, month=2, day=5, hour=8, minute=5, second=0)],
+    ['2', 'Manufacture product', 'Manufacture product', 0.0, 'start', 'manufacture', dt(year=2017, month=2, day=6, hour=8, minute=0, second=0)],
+    ['2', 'Manufacture product', 'Manufacture product', 1000.0, 'complete', 'manufacture', dt(year=2017, month=2, day=14, hour=8, minute=0, second=0)],
+    ['2', 'Get shipping address', 'Get shipping address', 0.0, 'start', 'sales', dt(year=2017, month=2, day=15, hour=12, minute=0, second=0)],
+    ['2', 'Get shipping address', 'Get shipping address', 0.0, 'complete', 'sales', dt(year=2017, month=2, day=15, hour=12, minute=10, second=0)],
+    ['2', 'Ship product', 'Ship product', 0.0, 'start', 'transport', dt(year=2017, month=2, day=16, hour=8, minute=0, second=0)],
+    ['2', 'Ship product', 'Ship product', 100.0, 'complete', 'transport', dt(year=2017, month=2, day=16, hour=15, minute=0, second=0)],
+    ['2', 'Emit invoice', 'Emit invoice', 0.0, 'start', 'sales', dt(year=2017, month=2, day=15, hour=12, minute=15, second=0)],
+    ['2', 'Emit invoice', 'Emit invoice', 0.0, 'complete', 'sales', dt(year=2017, month=2, day=15, hour=12, minute=15, second=0)],
+    ['2', 'Receive payment', 'Receive payment', 0.0, 'start', 'sales', dt(year=2017, month=2, day=17, hour=8, minute=0, second=0)],
+    ['2', 'Receive payment', 'Receive payment', 0.0, 'complete', 'sales', dt(year=2017, month=2, day=17, hour=8, minute=0, second=0)],
+    ['2', 'Archive order', 'Archive order', 0.0, 'start', 'sales', dt(year=2017, month=2, day=17, hour=8, minute=10, second=0)],
+    ['2', 'Archive order', 'Archive order', 0.0, 'complete', 'sales', dt(year=2017, month=2, day=17, hour=8, minute=15, second=0)],
+    # case id: 3
+    ['3', 'Check stock availability', 'Check stock availability', 0.0, 'start', 'warehouse', dt(year=2017, month=3, day=1, hour=8, minute=0, second=0)],
+    ['3', 'Check stock availability', 'Check stock availability', 0.0, 'complete', 'warehouse', dt(year=2017, month=3, day=1, hour=8, minute=0, second=0)],
+    ['3', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'start', 'transport', dt(year=2017, month=3, day=2, hour=8, minute=0, second=0)],
+    ['3', 'Retrieve product from warehouse', 'Retrieve product from warehouse', 0.0, 'complete', 'transport', dt(year=2017, month=3, day=2, hour=15, minute=0, second=0)],
+    ['3', 'Check raw materials availability', 'Check raw materials availability', 0.0, 'start', 'warehouse', dt(year=2017, month=3, day=3, hour=8, minute=0, second=0)],
+    ['3', 'Check raw materials availability', 'Check raw materials availability', 0.0, 'complete', 'warehouse', dt(year=2017, month=3, day=3, hour=8, minute=30, second=0)],
+    ['3', 'Request raw materials from supplier 2', 'Request raw materials from supplier 2', 0.0, 'start', 'warehouse', dt(year=2017, month=3, day=3, hour=9, minute=0, second=0)],
+    ['3', 'Request raw materials from supplier 2', 'Request raw materials from supplier 2', 0.0, 'complete', 'warehouse', dt(year=2017, month=3, day=3, hour=9, minute=5, second=0)],
+    ['3', 'Obtain raw materials from supplier 2', 'Obtain raw materials from supplier 2', 0.0, 'start', 'warehouse', dt(year=2017, month=3, day=5, hour=8, minute=5, second=0)],
+    ['3', 'Obtain raw materials from supplier 2', 'Obtain raw materials from supplier 2', 300.0, 'complete', 'warehouse', dt(year=2017, month=3, day=5, hour=8, minute=5, second=0)],
+    ['3', 'Manufacture product', 'Manufacture product', 0.0, 'start', 'manufacture', dt(year=2017, month=3, day=6, hour=8, minute=0, second=0)],
+    ['3', 'Manufacture product', 'Manufacture product', 1000.0, 'complete', 'manufacture', dt(year=2017, month=3, day=14, hour=8, minute=0, second=0)],
+    ['3', 'Get shipping address', 'Get shipping address', 0.0, 'start', 'sales', dt(year=2017, month=3, day=15, hour=12, minute=0, second=0)],
+    ['3', 'Get shipping address', 'Get shipping address', 0.0, 'complete', 'sales', dt(year=2017, month=3, day=15, hour=12, minute=10, second=0)],
+    ['3', 'Ship product', 'Ship product', 0.0, 'start', 'transport', dt(year=2017, month=3, day=16, hour=8, minute=0, second=0)],
+    ['3', 'Ship product', 'Ship product', 100.0, 'complete', 'transport', dt(year=2017, month=3, day=16, hour=15, minute=0, second=0)],
+    ['3', 'Emit invoice', 'Emit invoice', 0.0, 'start', 'sales', dt(year=2017, month=3, day=15, hour=12, minute=15, second=0)],
+    ['3', 'Emit invoice', 'Emit invoice', 0.0, 'complete', 'sales', dt(year=2017, month=3, day=15, hour=12, minute=15, second=0)],
+    ['3', 'Receive payment', 'Receive payment', 0.0, 'start', 'sales', dt(year=2017, month=3, day=17, hour=8, minute=0, second=0)],
+    ['3', 'Receive payment', 'Receive payment', 0.0, 'complete', 'sales', dt(year=2017, month=3, day=17, hour=8, minute=0, second=0)],
+    ['3', 'Archive order', 'Archive order', 0.0, 'start', 'sales', dt(year=2017, month=3, day=17, hour=8, minute=10, second=0)],
+    ['3', 'Archive order', 'Archive order', 0.0, 'complete', 'sales', dt(year=2017, month=3, day=17, hour=8, minute=15, second=0)]
 ]
 
-log_name = 'Test log'
+event_df = pd.DataFrame(events, columns=event_df_columns)
+event_df['caseid'] = event_df['caseid'].astype('category')
+event_df['activity'] = event_df['activity'].astype('category')
+event_df['concept:name'] = event_df['concept:name'].astype('category')
+event_df['cost:unit'] = event_df['cost:unit'].apply(pd.to_numeric, downcast='float')
+event_df['lifecycle:transition'] = event_df['lifecycle:transition'].astype('category')
+event_df['org:group'] = event_df['org:group'].astype('category')
+event_df['time:timestamp'] = event_df['time:timestamp'].astype('datetime64[ns]')
+
+# trace dataframe
+traces_df_columns = ['concept:name', 'cost:total']
+traces = [
+    ['1', 100.0],
+    ['2', 1300.0],
+    ['3', 1400.0]
+]
+
+trace_df = pd.DataFrame(traces, columns=traces_df_columns)
+trace_df['cost:total'] = trace_df['cost:total'].apply(pd.to_numeric, downcast='float')
+
+# create XLog
+xlog = XFactory.create_log()
+xlog_name = 'Test log'
+CONCEPT_EXTENSION.assign_name(xlog, xlog_name)
 total_time = 100
-total_time_attr = XFactory.create_attribute_continuous('time:total', total_time)
-CONCEPT_EXT.assign_name(LOG, log_name)
-LOG.get_attributes()['time:total'] = total_time_attr
+total_time_attribute = XFactory.create_attribute_continuous('time:total', total_time)
+xlog.get_attributes()['time:total'] = total_time_attribute
 
-# create dicts for making expected dataframes
-LOG_COL_DICT = {}
-TRACE_COL_DICT = ddict(list)
+for caseid, cost_total in traces:
+    xtrace = XFactory.create_trace()
 
-EVENT_DF_LIST = []
+    CONCEPT_EXTENSION.assign_name(xtrace, caseid)
+    total_cost_attribute = XFactory.create_attribute_continuous('cost:total', cost_total)
+    xtrace.get_attributes()['cost:total'] = total_cost_attribute
 
-for i in range(NB_TRACES):
-    trace = XFactory.create_trace()
-    event_col_dict = ddict(list)
-    caseid = str(i)
+    trace_events = filter(lambda event: event[0] == caseid, events)
 
-    CONCEPT_EXT.assign_name(trace, caseid)
-    total_cost = randint(0, i * 1000) * 1.
-    total_cost_attr = XFactory.create_attribute_continuous('cost:total', total_cost)
+    for caseid_event, activity, concept_name, cost_unit, lifecycle, org, timestamp in trace_events:
+        xevent = XFactory.create_event()
 
-    trace.get_attributes()['cost:total'] = total_cost_attr
+        CONCEPT_EXTENSION.assign_name(xevent, concept_name)
+        cost_unit_attribute = XFactory.create_attribute_continuous('cost:unit', cost_unit, EXTENSION_MANAGER.get_by_name('Cost'))
+        xevent.get_attributes()['cost:unit'] = cost_unit_attribute
+        lifecycle_attribute = XFactory.create_attribute_literal('lifecycle:transition', lifecycle, EXTENSION_MANAGER.get_by_name('Lifecycle'))
+        xevent.get_attributes()['lifecycle:transition'] = lifecycle_attribute
+        org_attribute = XFactory.create_attribute_literal('org:group', org, EXTENSION_MANAGER.get_by_name('Organizational'))
+        xevent.get_attributes()['org:group'] = org_attribute
+        timestamp_attribute = XFactory.create_attribute_timestamp('time:timestamp', timestamp, EXTENSION_MANAGER.get_by_name('Time'))
+        xevent.get_attributes()['time:timestamp'] = timestamp_attribute
 
-    # update the column dict on the trace level
-    TRACE_COL_DICT['concept:name'].append(caseid)
-    TRACE_COL_DICT['cost:total'].append(total_cost)
+        xtrace.append(xevent)
 
-    for j in range(NB_EVENTS):
-        event = XFactory.create_event()
-
-        activity = next(EVENT_NAME_GENERATOR)
-        timestamp_attr = XFactory.create_attribute_timestamp('date', i + 1)
-        timestamp = timestamp_attr.get_value()
-        lifecycle = np.random.choice(LIFECYCLES)
-        lifecycle_attr = XFactory.create_attribute_literal('lifecycle:transition', lifecycle)
-        group = np.random.choice(GROUPS)
-        unit_cost = randint(0, i * 100) * 1.0
-        unit_cost_attr = XFactory.create_attribute_continuous('cost:unit', unit_cost)
-
-        CONCEPT_EXT.assign_name(event, activity)
-        ORGANIZATIONAL_EXT.assign_group(event, group)
-        event.get_attributes()['time:timestamp'] = timestamp_attr
-        event.get_attributes()['lifecycle:transition'] = lifecycle_attr
-        event.get_attributes()['cost:unit'] = unit_cost_attr
-
-        # update the event column dict
-        event_col_dict[EventStorageFactory.CASEID].append(caseid)
-        event_col_dict[EventStorageFactory.ACTIVITY].append(activity)
-        event_col_dict['concept:name'].append(activity)
-        event_col_dict['time:timestamp'].append(timestamp)
-        event_col_dict['lifecycle:transition'].append(lifecycle)
-        event_col_dict['org:group'].append(group)
-        event_col_dict['cost:unit'].append(unit_cost)
-
-        EVENTS.append((caseid, event))
-
-        trace.append(event)
-
-    # create event df for this trace
-    columns = [EventStorageFactory.CASEID, EventStorageFactory.ACTIVITY,
-               'concept:name', 'cost:unit', 'lifecycle:transition', 'org:group',
-               'time:timestamp']
-    event_df = pd.DataFrame(event_col_dict, columns=columns)
-
-    utils.optimize_df_dtypes(event_df)
-
-    EVENT_DF_LIST.append(event_df)
-
-    TRACES.append(trace)
-    LOG.append(trace)
-
-# make the trace df
-columns = ['concept:name', 'cost:total']
-TRACE_DF = pd.DataFrame(TRACE_COL_DICT, columns=columns)
-utils.optimize_df_dtypes(TRACE_DF)
+    xlog.append(xtrace)
 
 
-def id_func(fixture_value):
-    concept = XExtensionManager().get_by_name('Concept').extract_name(fixture_value)
-    timestamp = XExtensionManager().get_by_name('Time').extract_timestamp(fixture_value)
+# make data available as fixtures
+def id_function(fixture_value):
+    if not isinstance(fixture_value, XAttributable):
+        return str(fixture_value)
+    concept, timestamp = None, None
+    if 'concept:name' in fixture_value.get_attributes():
+        concept = fixture_value.get_attributes()['concept:name'].get_value()
+    if 'time:timestamp' in fixture_value.get_attributes():
+        timestamp = fixture_value.get_attributes()['time:timestamp'].get_value()
     attributes = ''
     for name in sorted(fixture_value.get_attributes().keys()):
-        val = fixture_value.get_attributes()[name]
         if 'concept:name' in name or 'time:timestamp' in name:
             continue
-        attributes = attributes + ', ' + val.get_value() if attributes != '' else val.get_value()
-    e = '{}({}, {}, {})'.format(type(fixture_value).__name__, concept, timestamp, attributes)
-    return e
-
-
-# create fixtures
-@pytest.fixture(scope='function')
-def event_attr_list():
-    return EVENT_ATTR_KEYS
+        value = fixture_value.get_attributes()[name].get_value()
+        attributes = attributes + ', ' + value if attributes != '' else value
+    string = '{}({}, {}, {})'.format(type(fixture_value).__name__, concept, timestamp, attributes)
+    return string
 
 
 @pytest.fixture(scope='function')
-def trace_attr_list():
-    return TRACE_ATTR_KEYS
+def an_event_attribute_list():
+    return event_attributes
 
 
 @pytest.fixture(scope='function')
-def log_attr_list():
-    return LOG_ATTR_KEYS
+def a_trace_attribute_list():
+    return trace_attributes
 
 
-@pytest.fixture(scope='function', params=EVENTS, ids=lambda item: id_func(item[0][1]))
+@pytest.fixture(scope='function')
+def a_log_attribute_list():
+    return log_attributes
+
+
+@pytest.fixture(scope='function', params=list(fts.reduce(lambda all, t: all + t, xlog, [])), ids=id_function)
 def an_event(request):
     return request.param
 
 
-@pytest.fixture(scope='function', params=zip(TRACES, EVENT_DF_LIST),
-                ids=lambda item: id_func(item[0]))
-def a_trace_and_df(request):
+caseids = map(lambda event: event[0], events)
+events_and_caseids = zip(caseids, events)
+@pytest.fixture(scope='function', params=events_and_caseids, ids=id_function)
+def an_event_and_caseid(request):
     return request.param
 
 
-@pytest.fixture(scope='function', ids=lambda item: id_func(item[0]))
-def traces_and_df():
-    return (LOG, TRACE_DF)
+@pytest.fixture(scope='function')
+def an_event_df():
+    return event_df
 
 
 @pytest.fixture(scope='function')
-def log_and_event_df():
-    df = pd.concat(EVENT_DF_LIST)
-    utils.optimize_df_dtypes(df)
-    return (LOG, df)
+def a_trace_df():
+    return trace_df
 
 
+@pytest.fixture(scope='function')
+def an_xlog():
+    return xlog
+
+
+@pytest.fixture(scope='function', params=xlog, ids=id_function)
+def a_xtrace(request):
+    return request.param
