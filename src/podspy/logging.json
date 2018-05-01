@@ -38,14 +38,15 @@
 
     "loggers": {
         "log": {
-            "level": "INFO",
+            "level": "DEBUG",
             "handlers": ["console"],
             "propagate": false
         }
     },
 
     "root": {
-        "level": "INFO",
-        "handlers": ["console", "info_file_handler", "error_file_handler"]
+        "level": "DEBUG",
+//        "handlers": ["console", "info_file_handler", "error_file_handler"]
+        "handlers": ["console"]
     }
 }
