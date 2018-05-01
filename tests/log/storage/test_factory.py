@@ -24,32 +24,42 @@ def factory():
     return EventStorageFactory()
 
 
-def test_traces2df(factory, traces_and_df, trace_attr_list):
-    traces = traces_and_df[0]
-    expected_df = traces_and_df[1]
+def test_traces2df(factory, an_xlog, a_trace_df, a_trace_attribute_list):
+    expected_df = a_trace_df
 
-    df = factory.traces2df(traces, trace_attr_list)
+    df = factory.traces2df(an_xlog, a_trace_attribute_list)
 
     assert_frame_equal(df, expected_df, check_dtype=True)
 
 
-def test_trace_events2df(factory, a_trace_and_df, event_attr_list):
-    a_trace = a_trace_and_df[0]
-    expected_df = a_trace_and_df[1]
+def test_trace_events_2_df(factory, a_xtrace, an_event_df, an_event_attribute_list):
+    caseid = a_xtrace.get_attributes()['concept:name'].get_value()
+    expected_df = an_event_df[(an_event_df[EventStorageFactory.CASEID] == caseid)]
+    expected_df = expected_df.reset_index(drop=True)
 
-    caseid = expected_df['caseid'].values[0]
+    for col in expected_df.select_dtypes(include=['category']).columns:
+        expected_df.loc[:,col] = expected_df[col].astype('str')
+
+        # need to redo whether to categorize data
+        nb_unique_vals = expected_df[col].unique().shape[0]
+        nb_total = expected_df[col].shape[0]
+
+        if nb_unique_vals / nb_total < 0.5:
+            expected_df.loc[:,col] = expected_df[col].astype('category')
 
     clf = XEventNameClassifier()
-    df = factory.trace_events2df(a_trace, caseid, event_attr_list, clf)
+
+    df = factory.trace_events2df(a_xtrace, caseid, an_event_attribute_list, clf)
 
     assert_frame_equal(df, expected_df, check_dtype=True)
 
 
-def test_log_events2df(factory, log_and_event_df, event_attr_list):
-    log = log_and_event_df[0]
-    expected_df = log_and_event_df[1]
-
+def test_log_events_2_df(factory, an_xlog, an_event_df, an_event_attribute_list):
+    expected_df = an_event_df
     clf = XEventNameClassifier()
-    df = factory.log_events2df(log, event_attr_list, clf)
+
+    df = factory.log_events2df(an_xlog, an_event_attribute_list, clf)
 
     assert_frame_equal(df, expected_df, check_dtype=True)
+
+
