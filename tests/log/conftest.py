@@ -2,10 +2,11 @@
 
 
 from datetime import datetime as dt
-from podspy.log.storage import *
 import pandas as pd
 import pytest
 import functools as fts
+
+from podspy.log.constant import *
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.extension.XExtensionManager import XExtensionManager
@@ -21,25 +22,25 @@ __email__ = "walee@uc.cl"
 
 # log attributes
 log_attributes = [
-    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
-    (EventStorageFactory.CONTINUOUS, 'time:total', 'time:total', None)
+    (LITERAL, 'concept:name', 'concept:name', None),
+    (CONTINUOUS, 'time:total', 'time:total', None)
 ]
 
 
 # trace attributes
 trace_attributes = [
-    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
-    (EventStorageFactory.CONTINUOUS, 'cost:total', 'cost:total', None)
+    (LITERAL, 'concept:name', 'concept:name', None),
+    (CONTINUOUS, 'cost:total', 'cost:total', None)
 ]
 
 
 # event attributes
 event_attributes = [
-    (EventStorageFactory.LITERAL, 'concept:name', 'concept:name', None),
-    (EventStorageFactory.CONTINUOUS, 'cost:unit', 'cost:unit', None),
-    (EventStorageFactory.LITERAL, 'lifecycle:transition', 'lifecycle:transition', None),
-    (EventStorageFactory.LITERAL, 'org:group', 'org:group', None),
-    (EventStorageFactory.TIMESTAMP, 'time:timestamp', 'time:timestamp', None)
+    (LITERAL, 'concept:name', 'concept:name', None),
+    (CONTINUOUS, 'cost:unit', 'cost:unit', None),
+    (LITERAL, 'lifecycle:transition', 'lifecycle:transition', None),
+    (LITERAL, 'org:group', 'org:group', None),
+    (TIMESTAMP, 'time:timestamp', 'time:timestamp', None)
 ]
 
 # column order:
@@ -50,7 +51,7 @@ event_attributes = [
 #   5) lifecyle:transition
 #   6) org:group
 #   7) time:timestamp
-event_df_columns = [ EventStorageFactory.CASEID, EventStorageFactory.ACTIVITY, 'concept:name', 'cost:unit',
+event_df_columns = [ CASEID, ACTIVITY, 'concept:name', 'cost:unit',
                      'lifecycle:transition', 'org:group', 'time:timestamp' ]
 events = [
     # case id: 1

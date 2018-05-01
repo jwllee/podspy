@@ -6,7 +6,10 @@
 
 
 import pytest
+
 from podspy.log.storage import *
+from podspy.log.constant import *
+
 from pandas.util.testing import assert_frame_equal
 from opyenxes.classification.XEventNameClassifier import XEventNameClassifier
 
@@ -34,7 +37,7 @@ def test_traces2df(factory, an_xlog, a_trace_df, a_trace_attribute_list):
 
 def test_trace_events_2_df(factory, a_xtrace, an_event_df, an_event_attribute_list):
     caseid = a_xtrace.get_attributes()['concept:name'].get_value()
-    expected_df = an_event_df[(an_event_df[EventStorageFactory.CASEID] == caseid)]
+    expected_df = an_event_df[(an_event_df[CASEID] == caseid)]
     expected_df = expected_df.reset_index(drop=True)
 
     for col in expected_df.select_dtypes(include=['category']).columns:

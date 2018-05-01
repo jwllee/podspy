@@ -10,8 +10,8 @@ import pytest
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from podspy.log.storage import *
 from podspy.log.noise import *
+from podspy.log.constant import *
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -22,7 +22,7 @@ def simple_test():
     assert 1 + 1 == 2
 
 
-event_df_columns = [EventStorageFactory.CASEID, EventStorageFactory.ACTIVITY, 'concept:name', 'time:timestamp']
+event_df_columns = [CASEID, ACTIVITY, 'concept:name', 'time:timestamp']
 
 events = [
     ['1', 'a', 'a', 1], ['1', 'b', 'b', 2], ['1', 'c', 'c', 3], ['1', 'd', 'd', 4], ['1', 'e', 'e', 5], ['1', 'f', 'f', 6],
