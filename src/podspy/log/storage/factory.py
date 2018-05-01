@@ -8,16 +8,18 @@ Note:
     - Do not support representing XAttributeList and XAttributeContainer!
 """
 
+import pandas as pd
+import functools as fts
+import itertools as its
 
 from opyenxes.classification.XEventNameClassifier import XEventNameClassifier
 from opyenxes.extension.XExtension import XExtension
 from opyenxes.utils.XAttributeUtils import XAttributeUtils
 from opyenxes.extension.XExtensionManager import XExtensionManager
-from podspy.log import utils
-from podspy.log.storage import *
-import pandas as pd
-import functools as fts
-import itertools as its
+
+from ..storage import *
+from .. import utils
+from ..constant import *
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -29,16 +31,6 @@ class EventStorageFactory:
 
     MANAGER = XExtensionManager()
     CONCEPT_EXTENSION = MANAGER.get_by_name('Concept')
-
-    CASEID = 'caseid'
-    ACTIVITY = 'activity'
-
-    # mapping between XAttribute type strings and pandas dtype
-    DISCRETE = 'DISCRETE'
-    LITERAL = 'LITERAL'
-    CONTINUOUS = 'CONTINUOUS'
-    BOOLEAN = 'BOOLEAN'
-    TIMESTAMP = 'TIMESTAMP'
 
     ATTR_2_DTYPE = {
         DISCRETE: 'int',
@@ -99,12 +91,12 @@ class EventStorageFactory:
 
     def __get_activity_series(self, events, clf):
         activities = map(lambda event: clf.get_class_identity(event), events)
-        series = pd.Series(activities, dtype='str', name=EventStorageFactory.ACTIVITY)
+        series = pd.Series(activities, dtype='str', name=ACTIVITY)
         return series
 
     def trace_events2df(self, trace, caseid, event_attribute_list, clf):
         series_dict = dict()
-        s_caseid = pd.Series(list(its.repeat(caseid, times=len(trace))), dtype='str', name=EventStorageFactory.CASEID)
+        s_caseid = pd.Series(list(its.repeat(caseid, times=len(trace))), dtype='str', name=CASEID)
         s_activity = self.__get_activity_series(trace, clf)
 
         series_dict[s_caseid.name] = s_caseid

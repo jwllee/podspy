@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import logging
 
-from .storage import EventStorageFactory
+from .constant import *
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -56,8 +56,8 @@ def __add_swap_noise(event_df, pair, occur=1.):
     activity_0 = pair[0]
     activity_1 = pair[1]
 
-    indexes_0 = noisy[noisy[EventStorageFactory.ACTIVITY] == activity_0].index.values
-    indexes_1 = noisy[noisy[EventStorageFactory.ACTIVITY] == activity_1].index.values
+    indexes_0 = noisy[noisy[ACTIVITY] == activity_0].index.values
+    indexes_1 = noisy[noisy[ACTIVITY] == activity_1].index.values
 
     if len(indexes_0) != len(indexes_1):
         msg = 'There are {} events with activity {} and {} events with activity {}!'.format(len(indexes_0), activity_0,
@@ -74,8 +74,8 @@ def __add_swap_noise(event_df, pair, occur=1.):
     logger.debug(df)
 
     # make the swap noises
-    noisy.iloc[df[activity_0].values, (noisy.columns == EventStorageFactory.ACTIVITY)] = activity_1
-    noisy.iloc[df[activity_1].values, (noisy.columns == EventStorageFactory.ACTIVITY)] = activity_0
+    noisy.iloc[df[activity_0].values, (noisy.columns == ACTIVITY)] = activity_1
+    noisy.iloc[df[activity_1].values, (noisy.columns == ACTIVITY)] = activity_0
 
     # may need to change columns with concept:name as well
     if 'concept:name' in noisy.columns:
