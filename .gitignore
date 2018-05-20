@@ -68,3 +68,6 @@ target/
 Main.py
 algo.txt
 .pytest_cache/
+
+data/
+jupyter/
