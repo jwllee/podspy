@@ -124,7 +124,7 @@ EVENTS = [
 
 EVENT_DF = pd.DataFrame(EVENTS, columns=EVENT_DF_COLUMNS)
 
-TRACE_DF_COLUMNS = [BasicAttributes.CONCEPT_NAME.value, BasicAttributes.COST_AMOUNT.value]
+TRACE_DF_COLUMNS = [BasicAttributes.CONCEPT_NAME.value, BasicAttributes.COST_TOTAL.value]
 
 TRACES = [
     ['1', 100.0],
