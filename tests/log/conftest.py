@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import functools as fts
 
-from podspy.log.table import BasicAttributes
+from podspy.log.table import BasicAttributes, LogTable
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.model.XAttributable import XAttributable
@@ -27,14 +27,24 @@ __email__ = "walee@uc.cl"
 
 LOG_ATTRIBUTES = [
     (XAttributeType.LITERAL.name, 'concept:name', None),
-    (XAttributeType.CONTINUOUS.name, 'time:total', None)
+    (XAttributeType.CONTINUOUS.name, 'total_time', None)
 ]
+
+LOG_ATTRIBUTE_DICT = {
+    'concept:name': 'Test log',
+    'total_time': 100
+}
 
 
 TRACE_ATTRIBUTES = [
     (XAttributeType.LITERAL.name, 'concept:name', None),
     (XAttributeType.CONTINUOUS.name, 'cost:total', None)
 ]
+
+TRACE_ATTRIBUTE_DICT = {
+    'concept:name': '',
+    'cost:total': 1.
+}
 
 
 EVENT_ATTRIBUTES = [
@@ -44,6 +54,14 @@ EVENT_ATTRIBUTES = [
     (XAttributeType.LITERAL.name, 'org:group', None),
     (XAttributeType.TIMESTAMP.name, 'time:timestamp', None)
 ]
+
+EVENT_ATTRIBUTE_DICT = {
+    'concept:name': '',
+    'cost:unit': 1.,
+    'lifecycle:transition': 'complete',
+    'org:group': '',
+    'time:timestamp': dt.now()
+}
 
 
 # column order:
@@ -134,6 +152,9 @@ TRACES = [
 
 TRACE_DF = pd.DataFrame(TRACES, columns=TRACE_DF_COLUMNS)
 
+LOG_TABLE = LogTable(event_df=EVENT_DF, trace_df=TRACE_DF,
+                     attributes=LOG_ATTRIBUTE_DICT)
+
 XLOG = XFactory.create_log()
 XLOG_NAME = 'Test log'
 CONCEPT_EXTENSION.assign_name(XLOG, XLOG_NAME)
@@ -218,3 +239,8 @@ def an_event_df():
 @pytest.fixture(scope='function')
 def a_trace_df():
     return TRACE_DF
+
+
+@pytest.fixture(scope='function')
+def a_log_table():
+    return LOG_TABLE
