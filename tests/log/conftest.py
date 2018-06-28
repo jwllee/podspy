@@ -5,6 +5,7 @@ from datetime import datetime as dt
 import pandas as pd
 import pytest
 import functools as fts
+import itertools as its
 
 from podspy.log.table import LogTable
 import podspy.log.constant as const
@@ -13,6 +14,9 @@ from opyenxes.factory.XFactory import XFactory
 from opyenxes.model.XAttributable import XAttributable
 from opyenxes.extension.XExtensionManager import XExtensionManager
 from opyenxes.utils.XAttributeUtils import XAttributeType, XAttributeUtils
+from opyenxes.classification.XEventNameClassifier import XEventNameClassifier
+from opyenxes.classification.XEventAndClassifier import XEventAndClassifier
+from opyenxes.classification.XEventLifeTransClassifier import XEventLifeTransClassifier
 
 EXTENSION_MANAGER = XExtensionManager()
 CONCEPT_EXTENSION = EXTENSION_MANAGER.get_by_name('Concept')
@@ -153,8 +157,15 @@ TRACES = [
 
 TRACE_DF = pd.DataFrame(TRACES, columns=TRACE_DF_COLUMNS)
 
+NAME_AND_LIFECYCLE_CLF = XEventAndClassifier([XEventNameClassifier(), XEventLifeTransClassifier()])
+
+CLASSIFIERS = {
+    XEventNameClassifier().name(): [const.CONCEPT_NAME],
+    NAME_AND_LIFECYCLE_CLF.name(): [const.CONCEPT_NAME, const.LIFECYCLE_TRANS]
+}
+
 LOG_TABLE = LogTable(event_df=EVENT_DF, trace_df=TRACE_DF,
-                     attributes=LOG_ATTRIBUTE_DICT)
+                     attributes=LOG_ATTRIBUTE_DICT, classifiers=CLASSIFIERS)
 
 XLOG = XFactory.create_log()
 XLOG_NAME = 'Test log'
@@ -245,3 +256,24 @@ def a_trace_df():
 @pytest.fixture(scope='function')
 def a_log_table():
     return LOG_TABLE
+
+# event identities
+# XEventNameClassifier
+event_identity_list_name = sorted([
+    'Check stock availability', 'Retrieve product from warehouse', 'Confirm order',
+    'Get shipping address', 'Ship product', 'Emit invoice', 'Receive payment',
+    'Archive order', 'Check raw materials availability', 'Request raw materials from supplier 1',
+    'Obtain raw materials from supplier 1', 'Manufacture product',
+    'Request raw materials from supplier 2', 'Obtain raw materials from supplier 2'
+])
+
+# XEventLife
+event_identity_list_lifecycle = its.product(event_identity_list_name, ['complete', 'start'])
+event_identity_list_lifecycle = list(map(lambda t: '&&'.join(t), event_identity_list_lifecycle))
+
+@pytest.fixture(scope='function', params=[
+    (XEventNameClassifier().name(), event_identity_list_name),
+    (NAME_AND_LIFECYCLE_CLF.name(), event_identity_list_lifecycle)
+])
+def an_event_clf_and_event_identity_list(request):
+    return request.param
