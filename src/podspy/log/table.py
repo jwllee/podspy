@@ -134,6 +134,45 @@ class LogTable:
 
         return id_list
 
+    def get_trace_variants(self):
+        ''' Allocates case ids to trace variants by their activity column
+
+        Returns
+        -------
+        pd.DataFrame
+            Consists two columns: caseid and variant
+
+        '''
+        # check if there are caseid and activity columns
+        if const.ACTIVITY not in self.event_df.columns:
+            raise ValueError('Activity column not defined in event df!')
+        if const.CASEID not in self.event_df.columns:
+            raise ValueError('Caseid column not defined in event df!')
+
+        # concat events per caseid so a trace of events can be computed before using
+        # groupby per trace
+
+        # concat events per caseid to form event strings
+        traces = self.event_df.groupby(const.CASEID, as_index=False)
+        logger.debug('Traces: \n'.format(traces))
+        traces = traces.agg({const.ACTIVITY: lambda values: self.variant_sep.join(values)})
+        # rename activity column as variant
+        traces.rename({const.ACTIVITY: const.VARIANT}, axis=1, inplace=True)
+
+        # create variant ids
+        variant_id = traces[[const.VARIANT]].drop_duplicates().reset_index(drop=True)
+        # to get index column for creating variant ids
+        variant_id = variant_id.reset_index()
+        make_variant_id = lambda val: '{} {}'.format(const.VARIANT, val)
+        variant_id[self.variant_id] = variant_id['index'].apply(make_variant_id)
+        variant_id = variant_id[[const.VARIANT, self.variant_id]]
+
+        # merge with traces to assign the variant id to each caseid
+        variant_df = pd.merge(traces, variant_id, on=const.VARIANT)
+        variant_df = variant_df[[const.CASEID, self.variant_id, const.VARIANT]]
+
+        return variant_df
+
 
 class XLogToLogTable:
 
