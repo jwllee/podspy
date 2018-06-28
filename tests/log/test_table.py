@@ -5,14 +5,16 @@
 """
 
 
-import pytest
+import pytest, logging
+import pandas as pd
+import numpy as np
 from podspy.log.table import *
 import podspy.log.constant as const
 
 from opyenxes.extension.XExtensionManager import XExtensionManager
 from pandas.testing import assert_frame_equal
 
-
+logger = logging.getLogger('tests')
 EXTENSION_MANAGER = XExtensionManager()
 CONCEPT_EXTENSION = EXTENSION_MANAGER.get_by_name('Concept')
 
@@ -60,3 +62,11 @@ def test_xlog2df(a_log_table, an_xlog, factory):
     assert table.classifiers == expected.classifiers
     assert_frame_equal(table.event_df, expected.event_df)
     assert_frame_equal(table.trace_df, expected.trace_df)
+
+
+def test_get_event_identity_list(a_log_table, an_event_clf_and_event_identity_list):
+    # set the event classifier of the log table
+    clf_name = an_event_clf_and_event_identity_list[0]
+    expected = an_event_clf_and_event_identity_list[1]
+    computed = a_log_table.get_event_identity_list(clf_name)
+    assert computed == expected
