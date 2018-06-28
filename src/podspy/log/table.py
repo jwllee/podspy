@@ -14,6 +14,7 @@ import warnings, logging
 import pandas as pd
 import numpy as np
 import functools as fts
+import itertools as its
 
 import podspy.log.constant as const
 
@@ -58,13 +59,15 @@ CONCEPT_EXT = MANAGER.get_by_name('Concept')
 logger = logging.getLogger('log')
 
 
-VARIANT_SEP = '|'
-
-
 class LogTable:
+    # default character to separator variants
+    VARIANT_SEP = '|'
+    VARIANT_ID = 'variant_id'
+
     def __init__(self, trace_df=None, event_df=None, attributes=None,
                  global_trace_attributes=None, global_event_attributes=None,
-                 classifiers=None, extensions=None):
+                 classifiers=None, extensions=None, variant_sep=VARIANT_SEP,
+                 variant_id=VARIANT_ID):
         ''' Container class of event data in tabular format.
 
         Parameters
@@ -94,6 +97,42 @@ class LogTable:
         self.xes_attributes = {'version': 2.0, 'features': []}
         self.classifiers = classifiers if classifiers is not None else dict()
         self.extensions = extensions if extensions is not None else dict()
+
+        self.variant_sep = variant_sep
+        self.variant_id = variant_id
+
+    def get_event_identity_list(self, clf_name=None, sort=True):
+        if clf_name is None or clf_name not in self.classifiers:
+            keys = list(self.classifiers.keys())
+            if len(keys) > 0:
+                clf_name = keys[0]
+
+        # classifier is a list of column names in event_df
+        # use concept:name if there's no classifier
+        if len(self.classifiers) == 0:
+            warnings.warn('No classifiers! Using concept:name as event classifier!')
+            clf = [const.CONCEPT_NAME]
+        else:
+            clf = self.classifiers[clf_name]
+        subset = self.event_df[clf].drop_duplicates()
+
+        logger.debug('Event identity columns with unique rows: \n{}'.format(subset.head(5)))
+        logger.debug('Event identity columns with unique rows dtypes: \n{}'.format(subset.dtypes))
+
+        # concat the columns if it involves more than one column
+        if len(clf) == 1:
+            id_list = its.chain(*subset.values.tolist())
+        else:
+            id_list = subset.apply(lambda row: '&&'.join(row), axis=1).tolist()
+
+        if sort:
+            id_list = sorted(id_list)
+
+        # logging the first five for inspection purpose
+        first_five = 5 if len(id_list) > 5 else len(id_list)
+        logger.debug('Identity list: {}'.format(id_list[:first_five]))
+
+        return id_list
 
 
 class XLogToLogTable:
