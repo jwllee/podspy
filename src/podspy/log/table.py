@@ -7,14 +7,15 @@ This module does stuff.
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
-__all__ = ['LogTable', 'XLogToLogTable', 'BasicAttributes']
+__all__ = ['LogTable', 'XLogToLogTable']
 
 
 import warnings, logging
 import pandas as pd
 import numpy as np
 import functools as fts
-from enum import Enum
+
+import podspy.log.constant as const
 
 from opyenxes.model.XLog import XLog
 from opyenxes.model.XTrace import XTrace
@@ -57,14 +58,7 @@ CONCEPT_EXT = MANAGER.get_by_name('Concept')
 logger = logging.getLogger('log')
 
 
-class BasicAttributes(Enum):
-    CASEID = 'caseid'
-    CONCEPT_NAME = 'concept:name'
-    COST_AMOUNT = 'cost:amount'
-    COST_TOTAL = 'cost:total'
-    LIFECYCLE_TRANS = 'lifecycle:transition'
-    ORG_GROUP = 'org:group'
-    TIME_TIMESTAMP = 'time:timestamp'
+VARIANT_SEP = '|'
 
 
 class LogTable:
@@ -217,7 +211,7 @@ class XLogToLogTable:
         nb_of_events = len(xevent_list)
         # ascending column order
         column_order = sorted(list(attribute_types.keys()))
-        dtypes = [(BasicAttributes.CASEID.value, np.dtype('U4000')), ]
+        dtypes = [(const.CASEID, np.dtype('U4000')), ]
         dtypes += [(col, attribute_types[col]) for col in column_order]
         logger.debug('Dtypes: {}'.format(dtypes))
         array = np.zeros((nb_of_events,), dtype=dtypes)
@@ -233,7 +227,7 @@ class XLogToLogTable:
             event_row = [caseid, ] + [self.defaultget(col, attributes, default=None) for col in column_order]
             array[ind] = tuple(event_row)
 
-        column_order = [BasicAttributes.CASEID.value, ] + column_order
+        column_order = [const.CASEID, ] + column_order
         df = pd.DataFrame(array, columns=column_order)
 
         logger.debug('Event df: \n{}'.format(df.head()))
