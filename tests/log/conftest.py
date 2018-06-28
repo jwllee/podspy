@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 import functools as fts
 
-from podspy.log.table import BasicAttributes, LogTable
+from podspy.log.table import LogTable
+import podspy.log.constant as const
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.model.XAttributable import XAttributable
@@ -70,9 +71,9 @@ EVENT_ATTRIBUTE_DICT = {
 #   5) lifecyle:transition
 #   6) org:group
 #   7) time:timestamp
-EVENT_DF_COLUMNS = [BasicAttributes.CASEID.value, BasicAttributes.CONCEPT_NAME.value,
-                    BasicAttributes.COST_AMOUNT.value, BasicAttributes.LIFECYCLE_TRANS.value,
-                    BasicAttributes.ORG_GROUP.value, BasicAttributes.TIME_TIMESTAMP.value]
+EVENT_DF_COLUMNS = [const.CASEID, const.CONCEPT_NAME,
+                    const.COST_AMOUNT, const.LIFECYCLE_TRANS,
+                    const.ORG_GROUP, const.TIME_TIMESTAMP]
 
 EVENTS = [
     # caseid: 1
@@ -142,7 +143,7 @@ EVENTS = [
 
 EVENT_DF = pd.DataFrame(EVENTS, columns=EVENT_DF_COLUMNS)
 
-TRACE_DF_COLUMNS = [BasicAttributes.CONCEPT_NAME.value, BasicAttributes.COST_TOTAL.value]
+TRACE_DF_COLUMNS = [const.CONCEPT_NAME, const.COST_TOTAL]
 
 TRACES = [
     ['1', 100.0],
@@ -187,13 +188,13 @@ def id_function(fixture_value):
     if not isinstance(fixture_value, XAttributable):
         return str(fixture_value)
     concept, timestamp = None, None
-    if BasicAttributes.CONCEPT_NAME.value in fixture_value.get_attributes():
+    if const.CONCEPT_NAME in fixture_value.get_attributes():
         concept = CONCEPT_EXTENSION.extract_name(fixture_value)
-    if BasicAttributes.TIME_TIMESTAMP.value in fixture_value.get_attributes():
+    if const.TIME_TIMESTAMP in fixture_value.get_attributes():
         timestamp = TIME_EXTENSION.extract_timestamp(fixture_value).timestamp() * 1000
     attributes = ''
     for name in sorted(fixture_value.get_attributes().keys()):
-        if BasicAttributes.CONCEPT_NAME.value in name or BasicAttributes.TIME_TIMESTAMP.value in name:
+        if const.CONCEPT_NAME in name or const.TIME_TIMESTAMP in name:
             continue
         value = fixture_value.get_attributes()[name].get_value()
         attributes = attributes + ', ' + value if attributes != '' else value

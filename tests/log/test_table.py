@@ -7,6 +7,7 @@
 
 import pytest
 from podspy.log.table import *
+import podspy.log.constant as const
 
 from opyenxes.extension.XExtensionManager import XExtensionManager
 from pandas.testing import assert_frame_equal
@@ -38,7 +39,7 @@ def test_xevents2df(an_event_df, a_xtrace, factory):
     caseid = CONCEPT_EXTENSION.extract_name(a_xtrace)
     caseid_list = [caseid for _ in range(len(a_xtrace))]
     df = factory.xevents2df(caseid_list, a_xtrace)
-    expected = an_event_df[(an_event_df[BasicAttributes.CASEID.value] == caseid)]
+    expected = an_event_df[(an_event_df[const.CASEID] == caseid)]
     expected.reset_index(inplace=True, drop=True)
     assert_frame_equal(df, expected)
 
