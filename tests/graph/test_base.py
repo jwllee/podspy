@@ -28,3 +28,9 @@ class TestAbstractGraphEdge:
         e2 = MockAbstractGraphEdge('a', 'c')
 
         assert e0 != e2
+
+    def test_hash(self):
+        e0 = MockAbstractGraphEdge('a', 'b')
+        expected = 'a'.__hash__() + 37 * 'b'.__hash__()
+
+        assert expected == e0.__hash__()

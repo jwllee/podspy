@@ -35,7 +35,7 @@ class AbstractGraphEdge(AbstractGraphElement):
         super().__init__(*args, **kwargs)
         self.src = src
         self.target = target
-        self.hash = hash(self.src) + 37 * hash(self.target)
+        self.hash = self.src.__hash__() + 37 * self.target.__hash__()
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
