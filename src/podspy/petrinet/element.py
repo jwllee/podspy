@@ -161,9 +161,8 @@ class Transition(PetrinetNode):
             self.map[attrib.FILLCOLOR] = None
 
     def __repr__(self):
-        return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.graph, self.label,
-                                       self._is_invisible)
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                       self.label, self._is_invisible)
 
     def __str__(self):
         return '{}, invisible: {}'.format(self.label, self._is_invisible)
