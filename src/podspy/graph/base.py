@@ -8,11 +8,14 @@ This module contains base graph classes.
 from podspy.util import attribute as attrib
 
 from abc import ABC, abstractmethod
-import uuid
+import uuid, logging
 
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
+
+
+logger = logging.getLogger(__file__)
 
 
 class AbstractGraphElement(ABC):
@@ -35,7 +38,7 @@ class AbstractGraphEdge(AbstractGraphElement):
         super().__init__(*args, **kwargs)
         self.src = src
         self.target = target
-        self.hash = self.src.__hash__() + 37 * self.target.__hash__()
+        self.hash_cache = hash((self.src, self.target))
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -43,11 +46,14 @@ class AbstractGraphEdge(AbstractGraphElement):
         return self.src == other.src and self.target == other.target
 
     def __hash__(self):
-        return self.hash
+        # need to make sure that hash value is not too big: <= 8 bytes in 64-bit computers
+        # check out: https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        logging.debug('Hash value: {}'.format(self.hash_cache))
+        return self.hash_cache
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
-                               self.src, self.target, self.hash)
+                               self.src, self.target, hash(self))
 
     def __str__(self):
         return '{} - {}'.format(self.src, self.target)
@@ -87,7 +93,7 @@ class AbstractGraphNode(AbstractGraphElement):
         return self > other or self == other
 
     def __hash__(self):
-        return hash(self._id)
+        return self._id.__hash__()
 
 
 class AbstractGraph(AbstractGraphElement):
