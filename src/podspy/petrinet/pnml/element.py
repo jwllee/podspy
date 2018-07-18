@@ -561,7 +561,7 @@ class PnmlToolSpecific(PnmlElement):
     TAG = 'toolspecific'
     PODSPY = 'podspy'
     PROM = 'ProM'
-    INVISIBLE = '$invisible'
+    INVISIBLE = '$invisible$'
     PROM_VERSION = '6.4'
 
     def __init__(self):
