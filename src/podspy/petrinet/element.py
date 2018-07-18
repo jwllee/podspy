@@ -7,11 +7,14 @@ This module contains petrinet element classes.
 
 
 from abc import abstractmethod
-import uuid
+import uuid, logging
 
 from podspy.graph import directed
 from podspy.util import attribute as attrib
 from podspy.util import shape, color
+
+
+logger = logging.getLogger(__file__)
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -146,6 +149,7 @@ class Transition(PetrinetNode):
 
     @is_invisible.setter
     def is_invisible(self, invisible):
+        # logger.debug('Setting {} to invisible: {}'.format(self, invisible))
         self._is_invisible = invisible
         if self._is_invisible:
             self.map[attrib.SIZE] = (30, 30)
