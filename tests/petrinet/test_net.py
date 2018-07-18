@@ -6,7 +6,6 @@ This module tests petri net classes.
 """
 
 
-from podspy.petrinet.net import *
 from podspy.petrinet.factory import *
 
 import pandas as pd

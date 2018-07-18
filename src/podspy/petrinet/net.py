@@ -255,7 +255,6 @@ class Petrinet(AbstractResetInhibitorNet):
         nb_trans = len(self.transitions)
         nb_places = len(self.places)
 
-        mat = np.zeros(shape=(nb_places, nb_trans))
         sorted_trans = sorted(self.transitions, key=lambda t: t.label)
         sorted_places = sorted(self.places, key=lambda p: p.label)
         sorted_trans_labels = list(map(lambda t: t.label, sorted_trans))
