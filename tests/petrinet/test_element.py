@@ -8,6 +8,7 @@ This module does stuff.
 
 import pytest
 from podspy.petrinet.element import *
+from podspy.petrinet.element import PetrinetEdge
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -61,5 +62,25 @@ def test_edge_equality():
     n5 = Place(graph1, place_label)
     n4._id = n1._id
     n5._id = n2._id
-    e3 = Arc(n4, n5, weight, edge_label)
+    e3 = Arc(n4, n5, weight)
     assert e1 != e3
+
+
+class TestPetrinetEdge:
+    class MockPetrinetEdge(PetrinetEdge):
+        def __init__(self, src, target, label, *args, **kwargs):
+            super().__init__(src, target, label, *args, **kwargs)
+
+    def test_hash_function(self):
+        graph, activity_label, place_label = 'graph', 'a', 'p0'
+        edge_label = '{}->{}'.format(activity_label, place_label)
+
+        t0 = Transition(graph, activity_label)
+        p0 = Place(graph, place_label)
+
+        e0 = TestPetrinetEdge.MockPetrinetEdge(t0, p0, edge_label)
+
+        expected = hash((t0, p0))
+
+        assert hash(e0) == expected
+
