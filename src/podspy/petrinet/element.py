@@ -68,7 +68,8 @@ class PetrinetEdge(directed.AbstractDirectedGraphEdge):
 
 class Arc(PetrinetEdge):
     def __init__(self, src, target, weight, *args, **kwargs):
-        super().__init__(src, target, *args, **kwargs)
+        label = str(weight)
+        super().__init__(src, target, label, *args, **kwargs)
         self._weight = weight
         self.map[attrib.LABEL] = str(self._weight)
         self.map[attrib.EDGEEND] = attrib.ARROWTYPE_TECHNICAL
