@@ -47,8 +47,8 @@ def test_edge_equality():
     # case 1: different source and target mean different edges
     edge_label = '{} -> {}'.format(activity_label, place_label)
     weight = 1
-    e1 = Arc(n1, n2, weight, label=edge_label)
-    e2 = Arc(n1, n3, weight, label=edge_label)
+    e1 = Arc(n1, n2, weight)
+    e2 = Arc(n1, n3, weight)
     assert e1 != e2
 
     # case 2: changing the _id of n2 makes the two edges equal
