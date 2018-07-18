@@ -254,30 +254,39 @@ class Petrinet(AbstractResetInhibitorNet):
     def get_transition_relation_dfs(self):
         nb_trans = len(self.transitions)
         nb_places = len(self.places)
+
         mat = np.zeros(shape=(nb_places, nb_trans))
         sorted_trans = sorted(self.transitions, key=lambda t: t.label)
         sorted_places = sorted(self.places, key=lambda p: p.label)
+        sorted_trans_labels = list(map(lambda t: t.label, sorted_trans))
+        sorted_place_labels = list(map(lambda p: p.label, sorted_places))
 
         # matrix defining the place to transition relations
-        p_to_t_df = pd.DataFrame(mat, columns=sorted_trans, index=sorted_places)
+        p_to_t_df = pd.DataFrame(np.zeros((nb_places, nb_trans)),
+                                 columns=sorted_trans_labels,
+                                 index=sorted_place_labels)
 
         # matrix defining the transition to place relations
-        t_to_p_df = pd.DataFrame(mat, columns=sorted_trans, index=sorted_places)
+        t_to_p_df = pd.DataFrame(np.zeros((nb_places, nb_trans)),
+                                 columns=sorted_trans_labels,
+                                 index=sorted_place_labels)
 
         for t in sorted_trans:
             # should only have Arc edges as a Petrinet
             out_edges_from_t = self.out_edge_map[t]
-            out_p_from_t = list(map(lambda e: (e.target, e.weight), out_edges_from_t))
+            out_p_from_t = list(map(lambda e: (e.target.label, e.weight), out_edges_from_t))
 
             # logger.debug('List of out edges from {!r}: {}'.format(t, out_p_from_t))
 
             places, weights = zip(*out_p_from_t)
-            p_to_t_df.loc[places, t] = weights
+            t_to_p_df.loc[places, t.label] = weights
 
-            in_edges_to_t = filter(lambda e: e.target == t, self.in_edge_map)
-            in_p_to_t = map(lambda e: (e.src, e.weight), in_edges_to_t)
+            in_edges_to_t = self.in_edge_map[t]
+            in_p_to_t = map(lambda e: (e.src.label, e.weight), in_edges_to_t)
             places, weights = zip(*in_p_to_t)
-            t_to_p_df.loc[places, t] = weights
+            p_to_t_df.loc[places, t.label] = weights
+
+        logger.debug('\n{}\n{}'.format(p_to_t_df, t_to_p_df))
 
         return p_to_t_df, t_to_p_df
 
