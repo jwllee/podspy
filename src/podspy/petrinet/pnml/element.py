@@ -26,6 +26,8 @@ __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 __all__ = [
     'Pnml',
+    'PnmlInitialMarking',
+    'PnmlInscription',
     'PnmlName',
     'PnmlNode',
     'PnmlPage',
@@ -34,6 +36,7 @@ __all__ = [
     'PnmlReferenceTransition',
     'PnmlTransition',
     'PnmlArc',
+    'PnmlArcType',
     'PnmlNet',
     'PnmlToolSpecific',
     'PnmlElementFactory'
@@ -48,6 +51,18 @@ class PnmlElementFactory:
     @staticmethod
     def create_arc():
         return PnmlArc()
+
+    @staticmethod
+    def create_arc_type():
+        return PnmlArcType()
+
+    @staticmethod
+    def create_init_marking():
+        return PnmlInitialMarking()
+
+    @staticmethod
+    def create_inscription():
+        return PnmlInscription()
 
     @staticmethod
     def create_name():
@@ -599,3 +614,79 @@ class PnmlToolSpecific(PnmlElement):
                                            self.activity, self.local_node_id)
 
 
+class PnmlArcType(PnmlAnnotation):
+    TAG = 'arctype'
+    EPNML_TAG = 'type'
+
+    def __init__(self):
+        super().__init__(PnmlArcType.TAG)
+
+    @property
+    def is_normal(self):
+        no_text = self.text is None
+        return no_text or self.text.text == '' or self.text.text == 'normal'
+
+    @property
+    def is_reset(self):
+        has_text = self.text is not None
+        return has_text and self.text.text == 'reset'
+
+    @property
+    def is_inhibitor(self):
+        has_text = self.text is not None
+        return has_text and self.text.text == 'inhibitor'
+
+    @property
+    def is_read(self):
+        has_text = self.text is not None
+        return has_text and self.text.text == 'read'
+
+    def set_normal(self):
+        self.text = PnmlBaseFactory.create_pnml_text('normal')
+
+    def set_reset(self):
+        self.text = PnmlBaseFactory.create_pnml_text('reset')
+
+    def set_inhibitor(self):
+        self.text = PnmlBaseFactory.create_pnml_text('inhibitor')
+
+    def set_read(self):
+        self.text = PnmlBaseFactory.create_pnml_text('read')
+
+    def __repr__(self):
+        return '{}()'.format(self.__class__.__name__)
+
+
+class PnmlInitialMarking(PnmlAnnotation):
+    TAG = 'initialMarking'
+
+    def __init__(self):
+        super().__init__(PnmlInitialMarking.TAG)
+
+    @property
+    def initial_marking(self):
+        try:
+            return int(self.text.text)
+        except Exception as e:
+            logger.error('Parsing {} as initial marking resulted in: {}'.format(self.text, e))
+        return 0
+
+    def __repr__(self):
+        return '{}()'.format(self.__class__.__name__)
+
+
+class PnmlInscription(PnmlAnnotation):
+    TAG = 'inscription'
+
+    def __init__(self):
+        super().__init__(PnmlInscription.TAG)
+
+    @property
+    def inscription(self):
+        try:
+            return int(self.text.text)
+        except:
+            return 1
+
+    def __repr__(self):
+        return '{}()'.format(self.__class__.__name__)
