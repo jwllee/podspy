@@ -7,16 +7,13 @@ This module contains base pnml classes.
 
 
 from abc import ABC, abstractmethod
-from podspy.util import attribute as attrib
-
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 __all__ = [
     'PnmlBaseFactory',
     'PnmlElement',
-    'PnmlText',
-    'PnmlAnnotation'
+    'PnmlText'
 ]
 
 
@@ -84,25 +81,6 @@ class PnmlElement(ABC):
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
                                self.tag)
-
-
-class PnmlAnnotation(PnmlElement):
-    @abstractmethod
-    def __init__(self, tag, text=None):
-        super().__init__(tag)
-        self.text = text
-        self.graphics = None
-
-    def convert_to_net(self, element):
-        if self.text:
-            element.map[attrib.LABEL] = self.text.text
-
-        if self.graphics:
-            self.graphics.convert_to_net(element)
-
-    def __repr__(self):
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                       self.text, self.graphics)
 
 
 class PnmlText(PnmlElement):

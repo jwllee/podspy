@@ -18,6 +18,7 @@ import logging
 from enum import Enum
 import uuid
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,6 +80,40 @@ class PnmlElementFactory:
     @staticmethod
     def create_tool_specific():
         return PnmlToolSpecific()
+
+
+class PnmlAnnotation(PnmlElement):
+    @abstractmethod
+    def __init__(self, tag, text=None):
+        super().__init__(tag)
+        self.text = text
+        self.graphics = None
+        self.tool_specific_list = list()
+
+    def add_child(self, child):
+        if isinstance(child, PnmlText):
+            self.text = child
+            added = True
+        elif isinstance(child, PnmlAnnotationGraphics):
+            self.graphics = child
+            added = True
+        elif isinstance(child, PnmlToolSpecific):
+            self.tool_specific_list.append(child)
+            added = True
+        else:
+            added = super().add_child(child)
+        return added
+
+    def convert_to_net(self, element):
+        if self.text:
+            element.map[attrib.LABEL] = self.text.text
+
+        if self.graphics:
+            self.graphics.convert_to_net(element)
+
+    def __repr__(self):
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.text, self.graphics)
 
 
 class PnmlType(Enum):
