@@ -10,6 +10,7 @@ from podspy.graph import directed
 from podspy.petrinet.element import *
 import pandas as pd
 import numpy as np
+import logging
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -20,6 +21,9 @@ __all__ = [
     'InhibitorNet',
     'Petrinet'
 ]
+
+
+logger = logging.getLogger(__file__)
 
 
 class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
@@ -262,8 +266,11 @@ class Petrinet(AbstractResetInhibitorNet):
 
         for t in sorted_trans:
             # should only have Arc edges as a Petrinet
-            out_edges_from_t = filter(lambda e: e.src == t, self.out_edge_map)
-            out_p_from_t = map(lambda e: (e.target, e.weight), out_edges_from_t)
+            out_edges_from_t = self.out_edge_map[t]
+            out_p_from_t = list(map(lambda e: (e.target, e.weight), out_edges_from_t))
+
+            # logger.debug('List of out edges from {!r}: {}'.format(t, out_p_from_t))
+
             places, weights = zip(*out_p_from_t)
             p_to_t_df.loc[places, t] = weights
 
