@@ -288,7 +288,7 @@ class PnmlName(PnmlAnnotation):
         super().__init__(PnmlName.TAG, text)
 
     def __repr__(self):
-        return '{}()'.format(self.__class__.__name__)
+        return '{}({})'.format(self.__class__.__name__, self.text)
 
 
 class PnmlNet(PnmlBasicObject):
@@ -309,11 +309,11 @@ class PnmlNet(PnmlBasicObject):
 
     def add_child(self, child):
         if isinstance(child, PnmlPage):
-            logger.debug('Adding {!r} as child'.format(child))
+            # logger.debug('Adding {!r} as child'.format(child))
             self.page_list.append(child)
             added = True
         elif isinstance(child, PnmlFinalMarkings):
-            logger.debug('Adding {!r} as child'.format(child))
+            # logger.debug('Adding {!r} as child'.format(child))
             self.final_markings = child
             added = True
         else:
@@ -383,7 +383,7 @@ class PnmlPage(PnmlNode):
         ]
         is_instance = map(lambda c: isinstance(child, c), child_cls)
         if any(is_instance):
-            logger.debug('Adding {!r} as child'.format(child))
+            # logger.debug('Adding {!r} as child'.format(child))
             self.node_list.append(child)
             added = True
         elif isinstance(child, PnmlArc):
@@ -394,6 +394,7 @@ class PnmlPage(PnmlNode):
         return added
 
     def convert_to_net(self, net, marking, place_map, transition_map, edge_map):
+        logger.debug('Converting {!r}'.format(self))
         # convert nodes to net
         self.convert_nodes_to_net(net, marking, place_map, transition_map)
 
@@ -452,6 +453,8 @@ class PnmlPlace(PnmlNode):
         return added
 
     def convert_to_net(self, net, marking, place_map):
+        logger.debug('Converting {} to place'.format(self))
+
         if self.name is not None and self.name.text is not None:
             label = self.name.text.text
         else:
@@ -466,6 +469,7 @@ class PnmlPlace(PnmlNode):
         if self.initial_marking is not None:
             weight = self.initial_marking.initial_marking
         if weight != 0:
+            logger.debug('Adding {} tokens from {} to {}'.format(weight, place, marking))
             marking.add(place, weight)
 
         # register the new place
@@ -577,6 +581,7 @@ class PnmlToolSpecific(PnmlElement):
         return True
 
     def convert_to_net(self, node):
+        # logger.debug('Converting {} with node: {}'.format(self, node))
         right_tool = self.tool == PnmlToolSpecific.PROM or self.tool == PnmlToolSpecific.PODSPY
         right_version = self.version == PnmlToolSpecific.PROM_VERSION
         has_local_id = self.local_node_id is not None
