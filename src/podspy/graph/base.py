@@ -48,7 +48,7 @@ class AbstractGraphEdge(AbstractGraphElement):
     def __hash__(self):
         # need to make sure that hash value is not too big: <= 8 bytes in 64-bit computers
         # check out: https://docs.python.org/3/reference/datamodel.html#object.__hash__
-        logging.debug('Hash value: {}'.format(self.hash_cache))
+        # logging.debug('Hash value: {}'.format(self.hash_cache))
         return self.hash_cache
 
     def __repr__(self):
