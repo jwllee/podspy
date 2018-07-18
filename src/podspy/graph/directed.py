@@ -26,7 +26,10 @@ class AbstractDirectedGraphEdge(base.AbstractGraphEdge):
         equal = super().__eq__(other)
         return equal and self.graph == other.graph
 
-    # todo: implement the other comparison methods
+    def __hash__(self):
+        # need to override hash method if __eq__ is overridden
+        # check out: https://docs.python.org/3/reference/datamodel.html#object.__hash__
+        return super().__hash__()
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
