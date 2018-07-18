@@ -69,7 +69,8 @@ def import_pnml_from_file(filename):
 
 def pnml_to_petrinet(pnml):
     pnml_net = pnml.net_list[0]
-    net = PetrinetFactory.new_petrinet(pnml_net.name)
+    net_label = pnml_net.name.text.text if pnml_net.name else 'net0'
+    net = PetrinetFactory.new_petrinet(net_label)
     marking = Marking()
     final_markings = set()
     pnml.convert_to_net(net, marking, final_markings)
