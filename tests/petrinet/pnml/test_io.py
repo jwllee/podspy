@@ -21,15 +21,17 @@ logger = logging.getLogger('tests')
 
 
 def test_import_pnml():
-    netfile = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
-    pnml = io.import_pnml_from_file(netfile)
+    net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
+    f = open(net_fp, 'r')
+    pnml = io.import_pnml_from_file(f)
     assert pnml is not None
     assert isinstance(pnml, Pnml)
 
 
 def test_import_petrinet():
-    netfile = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
-    pnml = io.import_pnml_from_file(netfile)
+    net_fp = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
+    f = open(net_fp, 'r')
+    pnml = io.import_pnml_from_file(f)
     net, marking, final_markings = io.pnml2ptnet(pnml)
 
     assert isinstance(net, Petrinet)

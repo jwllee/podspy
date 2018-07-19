@@ -53,10 +53,8 @@ def make_from_element(element, parent_cls):
     return pnml
 
 
-def import_pnml_from_file(filename):
-    with open(filename, 'r') as f:
-        tree = etree.parse(f)
-
+def import_pnml_from_file(file):
+    tree = etree.parse(file)
     root = tree.getroot()
 
     # should be <pnml>
