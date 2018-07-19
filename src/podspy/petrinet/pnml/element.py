@@ -255,24 +255,24 @@ class PnmlArc(PnmlBasicObject):
             is_reset = False
 
         # place -> transition
-        place, trans = (None, None)
+        src, target = (None, None)
         if self.source in place_map and self.target in transition_map:
-            place = place_map[self.source]
-            trans = transition_map[self.target]
+            src = place_map[self.source]
+            target = transition_map[self.target]
 
         # transition -> place
         elif self.source in transition_map and self.target in place_map:
-            trans = transition_map[self.source]
-            place = place_map[self.target]
+            src = transition_map[self.source]
+            target = place_map[self.target]
 
         # add arc
-        if place and trans:
+        if src and target:
             if is_normal:
-                arc = net.add_arc(place, trans, weight)
+                arc = net.add_arc(src, target, weight)
             elif is_inhibitor:
-                arc = net.add_inhibitor_arc(place, trans, weight)
+                arc = net.add_inhibitor_arc(src, target, weight)
             elif is_reset:
-                arc = net.add_reset_arc(place, trans, weight)
+                arc = net.add_reset_arc(src, target, weight)
 
         if arc:
             edge_map[self._id] = arc
