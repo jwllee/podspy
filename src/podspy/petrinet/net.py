@@ -20,7 +20,8 @@ __all__ = [
     'ResetNet',
     'ResetInhibitorNet',
     'InhibitorNet',
-    'Petrinet'
+    'Petrinet',
+    'AcceptingPetrinet'
 ]
 
 
