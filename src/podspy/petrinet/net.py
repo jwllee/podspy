@@ -300,7 +300,7 @@ class Petrinet(AbstractResetInhibitorNet):
 
 
 class AcceptingPetrinet:
-    def __init__(self, net, init_marking=None, *final_markings):
+    def __init__(self, net, init_marking=None, final_markings=set()):
         self.net = net
         self.init_marking = init_marking
         self.final_markings = {m for m in final_markings}
