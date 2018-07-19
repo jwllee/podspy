@@ -30,7 +30,7 @@ def test_import_pnml():
 def test_import_petrinet():
     netfile = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
     pnml = io.import_pnml_from_file(netfile)
-    net, marking, final_markings = io.pnml_to_petrinet(pnml)
+    net, marking, final_markings = io.pnml2ptnet(pnml)
 
     assert isinstance(net, Petrinet)
     assert isinstance(marking, Marking)
