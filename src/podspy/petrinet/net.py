@@ -335,3 +335,8 @@ class AcceptingPetrinet:
             final_markings.add(Marking())
 
         return init_marking, final_markings
+
+    def __repr__(self):
+        return '{}({}, {}, {})'.format(self.__class__.__name__,
+                                       self.net, self.init_marking,
+                                       self.final_markings)
