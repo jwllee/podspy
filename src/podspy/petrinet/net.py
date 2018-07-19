@@ -8,6 +8,7 @@ This module contains petri net classes.
 from abc import abstractmethod
 from podspy.graph import directed
 from podspy.petrinet.element import *
+from podspy.petrinet.semantics import Marking
 import pandas as pd
 import numpy as np
 import logging
@@ -296,3 +297,40 @@ class Petrinet(AbstractResetInhibitorNet):
         full_df = t_to_p_df - p_to_t_df
         return str(full_df)
 
+
+class AcceptingPetrinet:
+    def __init__(self, net, init_marking=None, *final_markings):
+        self.net = net
+        self.init_marking = init_marking
+        self.final_markings = {m for m in final_markings}
+
+        if init_marking is None or len(final_markings) == 0:
+            init, final = self.derive_marking()
+
+            if self.init_marking is None:
+                self.init_marking = init
+
+            if len(self.final_markings) == 0:
+                self.final_markings = final
+
+    def derive_marking(self):
+        assert isinstance(self.net, AbstractResetInhibitorNet)
+
+        init_marking = Marking()
+        final_markings = set()
+
+        for p in self.net.places:
+            # place is part of the initial marking if it does not have ingoing arcs
+            if p not in self.net.in_edge_map:
+                init_marking.add(p, weight=1)
+            # place is part of the final marking if it does not have outgoing arcs
+            if p not in self.net.out_edge_map:
+                final_marking = Marking()
+                final_marking.add(p, weight=1)
+                final_markings.add(final_marking)
+
+        # create an empty final marking if necessary
+        if len(final_markings) == 0:
+            final_markings.add(Marking())
+
+        return init_marking, final_markings
