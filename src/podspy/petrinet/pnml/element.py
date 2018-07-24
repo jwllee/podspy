@@ -502,12 +502,27 @@ class PnmlNet(PnmlBasicObject):
         if self.final_markings:
             self.final_markings.convert_to_net(place_map, final_markings)
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlNet.TAG)
+        ele.attrib['id'] = self._id
+        ele.attrib['type'] = self.type
+
+        if self.name is not None:
+            ele.append(self.name.to_lxml())
+
+        for page in self.page_list:
+            ele.append(page.to_lxml())
+
+        ele.append(self.final_markings.to_lxml())
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
                                        self._id, self.type, self.page_list)
 
 
 class PnmlNode(PnmlBasicObject):
+    @abstractmethod
     def __init__(self, tag):
         super().__init__(tag)
         self._id = None
