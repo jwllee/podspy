@@ -46,6 +46,7 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
             edges.update(self.arcs)
             edges.update(self.inhibitor_arcs)
             edges.update(self.reset_arcs)
+            return edges
 
     def get_nodes(self):
         nodes = set()
