@@ -9,6 +9,7 @@ from podspy.util import attribute as atr
 from podspy.util import layout as lot
 from podspy.petrinet.element import *
 from enum import Enum
+from lxml import etree
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -175,6 +176,23 @@ class PnmlAnnotationGraphics(PnmlElement):
             added = super().add_child(child)
         return added
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlAnnotationGraphics.TAG)
+
+        if self.offset is not None:
+            ele.append(self.offset.to_lxml())
+
+        if self.font is not None:
+            ele.append(self.font.to_lxml())
+
+        if self.fill is not None:
+            ele.append(self.fill.to_lxml())
+
+        if self.line is not None:
+            ele.append(self.line.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
                                            self.offset, self.font,
@@ -199,6 +217,17 @@ class PnmlArcGraphics(PnmlElement):
         else:
             added = super().add_child(child)
         return added
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlArcGraphics.TAG)
+
+        for pnml_pos in self.position_list:
+            ele.append(pnml_pos.to_lxml())
+
+        if self.line is not None:
+            ele.append(self.line.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
@@ -234,6 +263,12 @@ class PnmlDimension(PnmlElement):
             # dimension in x and y
             dim = (rbc[0] - luc[0], rbc[1] - luc[1])
             element.map[atr.SIZE] = dim
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlDimension.TAG)
+        ele.attrib['x'] = str(self.x)
+        ele.attrib['y'] = str(self.y)
+        return ele
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
@@ -277,6 +312,11 @@ class PnmlFill(PnmlElement):
     def convert_to_net(self, element):
         if self.color:
             element.map[atr.FILLCOLOR] = self.color
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlFill.TAG)
+        ele.attrib['color'] = self.color
+        return ele
 
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
@@ -478,6 +518,20 @@ class PnmlNodeGraphics(PnmlElement):
         if self.dimension:
             self.dimension.convert_to_net(element, box)
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlNodeGraphics.TAG)
+
+        if self.position is not None:
+            ele.append(self.position.to_lxml())
+
+        if self.fill is not None:
+            ele.append(self.fill.to_lxml())
+
+        if self.dimension is not None:
+            ele.append(self.dimension.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
                                            self.position, self.fill,
@@ -505,6 +559,12 @@ class PnmlOffset(PnmlElement):
             except:
                 self.y = None
         return True
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlOffset.TAG)
+        ele.attrib['x'] = str(self.x)
+        ele.attrib['y'] = str(self.y)
+        return ele
 
     def __repr__(self):
         return '{}({}, {}'.format(self.__class__.__name__,
@@ -539,6 +599,12 @@ class PnmlPosition(PnmlElement):
         # Since graphviz is used for layout, no need to set layout position of
         # the element.
         pass
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlPosition.TAG)
+        ele.attrib['x'] = str(self.x)
+        ele.attrib['y'] = str(self.y)
+        return ele
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,

@@ -16,6 +16,7 @@ from podspy.petrinet.pnml.extension import *
 
 from podspy.petrinet.factory import *
 from podspy.petrinet.semantics import *
+from podspy.petrinet.net import AbstractResetInhibitorNet, AcceptingPetrinet
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -73,3 +74,33 @@ def pnml2ptnet(pnml):
     final_markings = set()
     pnml.convert_to_net(net, marking, final_markings)
     return net, marking, final_markings
+
+
+def ptnet2pnml(net, marking=None, final_markings=None, layout=None):
+    marked_nets = {net: marking}
+    final_marked_nets = {net: final_markings}
+    pnml, id_map = PnmlElementFactory.net2pnml(marked_nets, final_marked_nets, layout)
+    return pnml, id_map
+
+
+def apnet2pnml(net, layout=None):
+    return ptnet2pnml(net.net, net.init_marking, net.final_markings, layout)
+
+
+def export_pnml_to_file(net, file, marking=None, final_markings=None, layout=None):
+    if isinstance(net, AbstractResetInhibitorNet):
+        pnml, id_map = ptnet2pnml(net, marking, final_markings, layout)
+    elif isinstance(net, AcceptingPetrinet):
+        pnml, id_map = apnet2pnml(net, layout)
+    else:
+        raise ValueError('Do not recognize net class: {}'.format(net.__class__))
+
+    # traverse pnml to convert it as etree
+    root = pnml.to_lxml()
+
+    encoding = "ISO-8859-1"
+    pretty_print = True
+
+    string = etree.tostring(root, encoding=encoding, pretty_print=pretty_print)
+
+    file.write(string.decode())

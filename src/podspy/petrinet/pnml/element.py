@@ -18,6 +18,7 @@ from abc import abstractmethod
 import logging
 from enum import Enum
 import uuid
+from lxml import etree
 
 
 logger = logging.getLogger(__name__)
@@ -284,6 +285,12 @@ class PnmlAnnotation(PnmlElement):
         if self.graphics:
             self.graphics.convert_to_net(element)
 
+    def add_graph_element(self, element, layout=None):
+        self.graphics = PnmlGraphicFactory.ele2annot_graphics(element, layout)
+
+    def add_text(self, text):
+        self.text = PnmlBaseFactory.create_pnml_text(text)
+
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
                                    self.text, self.graphics)
@@ -325,6 +332,14 @@ class Pnml(PnmlElement):
             self.net_list[0].convert_to_net(net, marking, final_markings, place_map,
                                             trans_map, edge_map)
 
+    def to_lxml(self):
+        ele = etree.Element(Pnml.TAG)
+        # each net is a child element
+        for net in self.net_list:
+            ele.append(net.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
                                            self.type, self.net_list,
@@ -353,6 +368,14 @@ class PnmlBasicObject(PnmlElement):
         element = kwargs['element']
         if self.name:
             self.name.convert_to_net(element)
+
+    def add_name(self, name):
+        """Adding name to :class:`PnmlBasicObject`
+
+        :param name: name
+        """
+        self.name = PnmlElementFactory.create_name()
+        self.name.add_text(name)
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
@@ -446,6 +469,19 @@ class PnmlArc(PnmlBasicObject):
             if self.inscription:
                 self.inscription.convert_to_net(arc)
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlArc.TAG)
+        ele.attrib['id'] = self._id
+        ele.attrib['source'] = self.source
+        ele.attrib['target'] = self.target
+        ele.append(self.name.to_lxml())
+
+        for tool in self.tool_specific_list:
+            ele.append(tool.to_lxml())
+
+        ele.append(self.arc_type.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({}, {}, {}, {}, {}, {})'.format(self.__class__.__name__,
@@ -459,6 +495,14 @@ class PnmlName(PnmlAnnotation):
 
     def __init__(self, text=None):
         super().__init__(PnmlName.TAG, text)
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlName.TAG)
+
+        if self.text is not None:
+            ele.append(self.text.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, self.text)
@@ -547,6 +591,14 @@ class PnmlNode(PnmlBasicObject):
         if self.graphics:
             self.graphics.convert_to_net(node)
 
+    def add_id(self, id_map, element):
+        super().add_name(element.label)
+        self._id = 'n{}'.format(len(id_map))
+        id_map[element] = self._id
+
+    def add_node_graphics(self, element, layout):
+        self.graphics = PnmlGraphicFactory.ele2node_graphics(element, layout)
+
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
                                    self._id, self.graphics)
@@ -560,6 +612,10 @@ class PnmlPage(PnmlNode):
         self.node_list = list()
         self.arc_list = list()
         self.subnet = None
+
+    def __hash__(self):
+        # todo: need better hash code for PnmlPage
+        return hash(PnmlPage.TAG)
 
     def add_child(self, child):
         child_cls = [
@@ -620,6 +676,21 @@ class PnmlPage(PnmlNode):
             if isinstance(node, PnmlPage):
                 node.convert_arcs_to_net(net, marking, place_map, transition_map, edge_map)
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlPage.TAG)
+        ele.attrib['id'] = self._id
+
+        if self.name is not None:
+            ele.append(self.name.to_lxml())
+
+        for node in self.node_list:
+            ele.append(node.to_lxml())
+
+        for arc in self.arc_list:
+            ele.append(arc.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
                                        self.node_list, self.arc_list,
@@ -665,6 +736,22 @@ class PnmlPlace(PnmlNode):
 
         for tool in self.tool_specific_list:
             tool.convert_to_net(place)
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlPlace.TAG)
+        ele.attrib['id'] = self._id
+        ele.append(self.name.to_lxml())
+
+        for tool in self.tool_specific_list:
+            ele.append(tool.to_lxml())
+
+        if self.graphics is not None:
+            ele.append(self.graphics.to_lxml())
+
+        if self.initial_marking is not None:
+            ele.append(self.initial_marking.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
@@ -738,6 +825,19 @@ class PnmlTransition(PnmlNode):
         # register new transition found
         transition_map[self._id] = trans
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlTransition.TAG)
+        ele.attrib['id'] = self._id
+        ele.append(self.name.to_lxml())
+
+        for tool in self.tool_specific_list:
+            ele.append(tool.to_lxml())
+
+        if self.graphics is not None:
+            ele.append(self.graphics.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
                                        self.receive_list,
@@ -762,6 +862,10 @@ class PnmlToolSpecific(PnmlElement):
 
     def add_attrib(self, attrib):
         super().add_attrib(attrib)
+        # logger.debug('Has tool: {}'.format('tool' in attrib))
+        # if 'tool' in attrib:
+        #     logger.debug('Tool: {}'.format(attrib['tool']))
+
         self.tool = attrib['tool'] if 'tool' in attrib else None
         self.version = attrib['version'] if 'version' in attrib else None
         self.activity = attrib['activity'] if 'activity' in attrib else None
@@ -780,6 +884,16 @@ class PnmlToolSpecific(PnmlElement):
                 node.is_invisible = True
             if has_local_id:
                 node.local_id = uuid.UUID(self.local_node_id)
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlToolSpecific.TAG)
+        # logger.debug('Tool: {}'.format(self.tool))
+        ele.attrib['tool'] = self.tool
+        ele.attrib['version'] = self.version
+        if self.activity is not None:
+            ele.attrib['activity'] = self.activity
+        ele.attrib['localNodeID'] = str(self.local_node_id)
+        return ele
 
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
@@ -826,6 +940,14 @@ class PnmlArcType(PnmlAnnotation):
     def set_read(self):
         self.text = PnmlBaseFactory.create_pnml_text('read')
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlArcType.TAG)
+
+        if self.text is not None:
+            ele.append(self.text.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}()'.format(self.__class__.__name__)
 
@@ -843,6 +965,14 @@ class PnmlInitialMarking(PnmlAnnotation):
         except Exception as e:
             logger.error('Parsing {} as initial marking resulted in: {}'.format(self.text, e))
         return 0
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlInitialMarking.TAG)
+
+        if self.text is not None:
+            ele.append(self.text.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}()'.format(self.__class__.__name__)

@@ -7,6 +7,7 @@ This module contains base pnml classes.
 
 
 from abc import ABC, abstractmethod
+from lxml import etree
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
@@ -99,6 +100,11 @@ class PnmlText(PnmlElement):
         super().add_text(text)
         self.text = text
         return True
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlText.TAG)
+        ele.text = self.text
+        return ele
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,

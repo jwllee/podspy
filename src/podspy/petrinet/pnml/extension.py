@@ -8,6 +8,7 @@ import logging
 
 from podspy.petrinet.pnml.base import *
 from podspy.petrinet.semantics import Marking
+from lxml import etree
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
@@ -88,6 +89,14 @@ class PnmlFinalMarking(PnmlElement):
 
         final_markings.add(final_marking)
 
+    def to_lxml(self):
+        ele = etree.Element(PnmlFinalMarking.TAG)
+
+        for marked_place in self.marked_place_list:
+            ele.append(marked_place.to_lxml())
+
+        return ele
+
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
                                self.marked_place_list)
@@ -111,6 +120,14 @@ class PnmlFinalMarkings(PnmlElement):
     def convert_to_net(self, place_map, final_markings):
         for final_marking in self.final_marking_list:
             final_marking.convert_to_net(place_map, final_markings)
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlFinalMarkings.TAG)
+
+        for marking in self.final_marking_list:
+            ele.append(marking.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
@@ -153,6 +170,15 @@ class PnmlMarkedPlace(PnmlElement):
                 self, place_map, marking
             )
             logger.debug(debug)
+
+    def to_lxml(self):
+        ele = etree.Element(PnmlMarkedPlace.TAG)
+        ele.attrib['idref'] = self.id_ref
+
+        if self.text is not None:
+            ele.append(self.text.to_lxml())
+
+        return ele
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
