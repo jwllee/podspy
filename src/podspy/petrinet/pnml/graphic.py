@@ -209,7 +209,7 @@ class PnmlArcGraphics(PnmlElement):
 class PnmlDimension(PnmlElement):
     TAG = 'dimension'
 
-    def __init__(self, x=40., y=40.):
+    def __init__(self, x=atr.DEF_NODE_WIDTH, y=atr.DEF_NODE_HEIGHT):
         super().__init__(PnmlDimension.TAG)
         self.x = x
         self.y = y
@@ -220,12 +220,12 @@ class PnmlDimension(PnmlElement):
             try:
                 self.x = PnmlPosition.SCALE * float(attrib['x'])
             except:
-                self.x = 40.
+                self.x = atr.DEF_NODE_WIDTH
         if 'y' in attrib:
             try:
                 self.y = PnmlPosition.SCALE * float(attrib['x'])
             except:
-                self.y = 40.
+                self.y = atr.DEF_NODE_HEIGHT
         return True
 
     def convert_to_net(self, element, box):
@@ -233,7 +233,7 @@ class PnmlDimension(PnmlElement):
             luc, rbc = box
             # dimension in x and y
             dim = (rbc[0] - luc[0], rbc[1] - luc[1])
-            element.map[attrib.SIZE] = dim
+            element.map[atr.SIZE] = dim
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
@@ -276,7 +276,7 @@ class PnmlFill(PnmlElement):
 
     def convert_to_net(self, element):
         if self.color:
-            element.map[attrib.FILLCOLOR] = self.color
+            element.map[atr.FILLCOLOR] = self.color
 
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
@@ -398,25 +398,25 @@ class PnmlLine(PnmlElement):
 
     def convert_to_net(self, element):
         if self.shape == Shape.SHAPE_LINE:
-            element.map[attrib.STYLE] = 'orthogonal'
+            element.map[atr.STYLE] = 'orthogonal'
         else:
-            element.map[attrib.STYLE] = 'spline'
+            element.map[atr.STYLE] = 'spline'
 
         if self.color:
             if isinstance(element, Arc):
-                element.map[attrib.EDGECOLOR] = self.color
+                element.map[atr.EDGECOLOR] = self.color
             else:
-                element.map[attrib.STROKECOLOR] = self.color
+                element.map[atr.STROKECOLOR] = self.color
 
         if self.width:
-            element.map[attrib.LINEWIDTH] = self.width
+            element.map[atr.LINEWIDTH] = self.width
 
         if self.style == Style.STYLE_DASH:
-            element.map[attrib.DASHPATTERN] = (3., 3.)
+            element.map[atr.DASHPATTERN] = (3., 3.)
         elif self.style == Style.STYLE_DOT:
-            element.map[attrib.DASHPATTERN] = (1., 3.)
+            element.map[atr.DASHPATTERN] = (1., 3.)
         elif self.style != Style.STYLE_DEFAULT:
-            element.map[attrib.DASHPATTERN] = (1., 0.)
+            element.map[atr.DASHPATTERN] = (1., 0.)
 
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,
@@ -452,10 +452,10 @@ class PnmlNodeGraphics(PnmlElement):
         return added
 
     def get_box(self):
-        position_x = self.position.x if self.position else 40.
-        position_y = self.position.y if self.position else 40.
-        dimension_x = self.dimension.x if self.dimension else 40.
-        dimension_y = self.dimension.y if self.dimension else 40.
+        position_x = self.position.x if self.position else atr.DEF_NODE_POS_X
+        position_y = self.position.y if self.position else atr.DEF_NODE_POS_Y
+        dimension_x = self.dimension.x if self.dimension else atr.DEF_NODE_WIDTH
+        dimension_y = self.dimension.y if self.dimension else atr.DEF_NODE_HEIGHT
 
         luc_x = (position_x - dimension_x) / 2
         luc_y = (position_y - dimension_y) / 2
@@ -466,7 +466,6 @@ class PnmlNodeGraphics(PnmlElement):
         rbc = (rbc_x, rbc_y)
 
         return luc, rbc
-
 
     def convert_to_net(self, element):
         box = self.get_box()
