@@ -5,7 +5,8 @@
 This module contains PNML graphic classes.
 """
 from podspy.petrinet.pnml.base import PnmlElement
-from podspy.util import attribute as attrib
+from podspy.util import attribute as atr
+from podspy.util import layout as lot
 from podspy.petrinet.element import *
 from enum import Enum
 
@@ -32,16 +33,66 @@ class PnmlGraphicFactory:
         return PnmlAnnotationGraphics()
 
     @staticmethod
+    def ele2annot_graphics(element, layout=None):
+        graphics = PnmlAnnotationGraphics()
+        graphics.fill = PnmlGraphicFactory.ele2fill(element, layout)
+        graphics.line = PnmlGraphicFactory.ele2line(element, layout)
+        if graphics.fill or graphics.line:
+            graphics.offset = PnmlGraphicFactory.create_offset(0., 0.)
+        return graphics
+
+    @staticmethod
     def create_arc_graphics():
         return PnmlArcGraphics()
+
+    @staticmethod
+    def ele2arc_graphics(element, layout=None):
+        graphic = PnmlArcGraphics()
+
+        position_list = lot.get_edge_points(element, layout)
+        for pos in position_list:
+            pnml_pos = PnmlGraphicFactory.create_position()
+            pnml_pos.x, pnml_pos.y = pos
+            graphic.position_list.append(pnml_pos)
+
+        graphic.line = PnmlGraphicFactory.ele2line(element, layout)
+        if len(graphic.position_list) > 0 and graphic.line:
+            # only give non-empty arc graphics
+            return graphic
+        return None
 
     @staticmethod
     def create_dimension():
         return PnmlDimension()
 
     @staticmethod
+    def ele2dimension(element, layout=None):
+        dim = PnmlDimension()
+        # dimension can be either in node.map (from ProM)
+        # or node.attr (from pygraphviz), we use ProM if possible
+        if atr.SIZE in element.map:
+            size = element.map[atr.SIZE]
+        else:
+            width = lot.get_width(element, layout, atr.DEF_NODE_WIDTH)
+            height = lot.get_width(element, layout, atr.DEF_NODE_HEIGHT)
+            size = (width, height)
+
+        dim.x, dim.y = size
+        return dim
+
+    @staticmethod
     def create_fill():
         return PnmlFill()
+
+    @staticmethod
+    def ele2fill(element, layout=None):
+        if atr.FILLCOLOR in element.map:
+            color = element.map[atr.FILLCOLOR]
+            if color != '#000000': # no point adding color if it's just black
+                fill = PnmlFill()
+                fill.color = color
+                return fill
+        return None
 
     @staticmethod
     def create_font():
@@ -52,16 +103,49 @@ class PnmlGraphicFactory:
         return PnmlLine()
 
     @staticmethod
+    def ele2line(element=None, layout=None):
+        # todo: implement getting line style from graph element
+        return None
+
+    @staticmethod
     def create_node_graphics():
         return PnmlNodeGraphics()
 
     @staticmethod
-    def create_offset():
-        return PnmlOffset()
+    def ele2node_graphics(element, layout=None):
+        n_gc = PnmlNodeGraphics()
+        n_gc.position = PnmlGraphicFactory.ele2position(element, layout)
+        n_gc.fill = PnmlGraphicFactory.ele2fill(element, layout)
+        n_gc.line = PnmlGraphicFactory.ele2line(element, layout)
+        n_gc.dimension = PnmlGraphicFactory.ele2dimension(element, layout)
+        return n_gc
+
+    @staticmethod
+    def create_offset(x=None, y=None):
+        return PnmlOffset(x, y)
 
     @staticmethod
     def create_position():
         return PnmlPosition()
+
+    @staticmethod
+    def ele2position(element=None, layout=None):
+        pnml_pos = PnmlPosition()
+        # should be in node.attr (from pygraphviz)
+        pos = lot.get_node_pos(element, layout, default=(atr.DEF_NODE_POS_X, atr.DEF_NODE_POS_Y))
+
+        # dimension can be either in node.map (from ProM)
+        # or node.attr (from pygraphviz), we use ProM if possible
+        if atr.SIZE in element.map:
+            size = element.map[atr.SIZE]
+        else:
+            width = lot.get_width(element, layout, default=atr.DEF_NODE_WIDTH)
+            height = lot.get_height(element, layout, default=atr.DEF_NODE_HEIGHT)
+            size = (width, height)
+
+        pnml_pos.x = pos[0] + size[0] / 2
+        pnml_pos.y = pos[1] + size[1] / 2
+        return pnml_pos
 
 
 class PnmlAnnotationGraphics(PnmlElement):

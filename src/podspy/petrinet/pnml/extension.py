@@ -28,12 +28,41 @@ class PnmlExtensionFactory:
         return PnmlFinalMarking()
 
     @staticmethod
+    def final_marking2pnml(places, marking, id_map):
+        pnml_fmarking = PnmlFinalMarking()
+        for place in places:
+            # need to find the id of place
+            # tmp = list(filter(lambda item: item[1] == place, id_map.items()))
+            # assert len(tmp) == 1, 'Should only have one filtered item: {}'.format(tmp)
+            # _id = tmp[0][0]
+            _id = id_map[place]
+            occ = marking.occurrences(place)
+            pnml_marked_place = PnmlExtensionFactory.marked_place2pnml(_id, occ)
+            pnml_fmarking.marked_place_list.append(pnml_marked_place)
+        return pnml_fmarking
+
+    @staticmethod
     def create_final_markings():
         return PnmlFinalMarkings()
 
     @staticmethod
+    def final_markings2pnml(places, final_markings, id_map):
+        pnml_fmarkings = PnmlFinalMarkings()
+        for marking in final_markings:
+            pnml_fmarking = PnmlExtensionFactory.final_marking2pnml(places, marking, id_map)
+            pnml_fmarkings.final_marking_list.append(pnml_fmarking)
+        return pnml_fmarkings
+
+    @staticmethod
     def create_marked_place():
         return PnmlMarkedPlace()
+
+    @staticmethod
+    def marked_place2pnml(place_id, nof_tokens):
+        pnml_marked_place = PnmlMarkedPlace()
+        pnml_marked_place.id_ref = place_id
+        pnml_marked_place.text = PnmlBaseFactory.create_pnml_text(str(nof_tokens))
+        return pnml_marked_place
 
 
 class PnmlFinalMarking(PnmlElement):

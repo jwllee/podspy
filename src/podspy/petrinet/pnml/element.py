@@ -10,6 +10,7 @@ from podspy.petrinet.pnml.extension import *
 
 from podspy.petrinet.element import *
 from podspy.petrinet.net import *
+from podspy.petrinet.element import PetrinetNode
 
 from podspy.util import attribute as attrib
 
@@ -49,8 +50,63 @@ class PnmlElementFactory:
         return Pnml()
 
     @staticmethod
+    def net2pnml(marked_nets, final_marked_nets, layout=None):
+        logger.debug('Converting nets to pnml')
+
+        pnml = Pnml()
+        pnml.net_list = list()
+        net_ctr = 1
+        # maps node id to node elements, and allows the generation of new unique node
+        # id by using the size of the dict
+        id_map = dict()
+
+        for net, marking in marked_nets.items():
+            logger.debug('Looping through net: \n{}'.format(net))
+
+            final_markings = final_marked_nets[net]
+            pnml_net = PnmlElementFactory.net2pnml_net(net=net,
+                                                       net_ctr=net_ctr,
+                                                       id_map=id_map,
+                                                       marking=marking,
+                                                       final_markings=final_markings,
+                                                       layout=layout)
+
+            logger.debug('PNML net: \n{}'.format(pnml_net))
+
+            pnml.net_list.append(pnml_net)
+            net_ctr += 1
+
+        return pnml, id_map
+
+    @staticmethod
     def create_arc():
         return PnmlArc()
+
+    @staticmethod
+    def arc2pnml(edge, id_map, layout=None):
+        arc = PnmlArc()
+        arc.add_name(edge.label)
+        tool_specific = PnmlElementFactory.node2tool_specific(edge)
+        arc.tool_specific_list.append(tool_specific)
+
+        arc._id = 'arc{}'.format(len(id_map))
+        id_map[edge] = arc._id
+        arc.inscription = PnmlElementFactory.create_inscription()
+        arc.inscription.add_graph_element(edge, layout)
+
+        arc.target = id_map[edge.target]
+        arc.source = id_map[edge.src]
+
+        arc.arc_type = PnmlElementFactory.create_arc_type()
+        if isinstance(edge, Arc):
+            arc.arc_type.set_normal()
+        elif isinstance(edge, ResetArc):
+            arc.arc_type.set_reset()
+        elif isinstance(edge, InhibitorArc):
+            arc.arc_type.set_inhibitor()
+
+        arc.graphics = PnmlGraphicFactory.ele2arc_graphics(edge, layout)
+        return arc
 
     @staticmethod
     def create_arc_type():
@@ -61,12 +117,51 @@ class PnmlElementFactory:
         return PnmlInitialMarking()
 
     @staticmethod
+    def init_marking2pnml(place, marking, layout=None):
+        init_marking = PnmlInitialMarking()
+        occ = marking.occurrences(place)
+        # place is part of initial marking
+        if occ > 0:
+            init_marking.add_graph_element(place, layout)
+            init_marking.text = PnmlBaseFactory.create_pnml_text(str(occ))
+            return init_marking
+        return None
+
+    @staticmethod
     def create_inscription():
         return PnmlInscription()
 
     @staticmethod
     def create_name():
         return PnmlName()
+
+    @staticmethod
+    def net2pnml_net(net, net_ctr, id_map, marking=None, final_markings=None, layout=None):
+        logger.debug('Converting net to pnml_net...')
+
+        # logger.debug('net: \n{}\n'
+        #              'marking: {}\n'
+        #              'final_markings: {}\n'
+        #              'net_ctr: {}\n'
+        #              'id_map: {}\n'
+        #              'layout: {}'.format(net, marking, final_markings,
+        #                                  net_ctr, id_map, layout))
+
+        pnml_net = PnmlNet()
+        pnml_net.add_name(net.label)
+        pnml_net._id = "net{}".format(net_ctr)
+        pnml_net.type = 'http://www.pnml.org/version-2009/grammar/pnmlcoremodel'
+        pnml_net.page_list = list()
+        page = PnmlElementFactory.net2page(net, marking, id_map, layout)
+        pnml_net.page_list.append(page)
+
+        # convert the final markings
+        if final_markings is not None:
+            pnml_net.final_markings = PnmlExtensionFactory.final_markings2pnml(net.places,
+                                                                               final_markings,
+                                                                               id_map)
+
+        return pnml_net
 
     @staticmethod
     def create_net():
@@ -77,8 +172,48 @@ class PnmlElementFactory:
         return PnmlPage()
 
     @staticmethod
+    def net2page(net, marking, id_map, layout=None):
+        page = PnmlPage()
+        page._id = 'n{}'.format(len(id_map))
+        id_map[page] = page._id
+
+        # add net nodes to node list
+        page.node_list = list()
+        page.arc_list = list()
+
+        for place in net.places:
+            pnml_place = PnmlElementFactory.place2pnml(place, id_map, marking, layout)
+            page.node_list.append(pnml_place)
+
+        for trans in net.transitions:
+            pnml_trans = PnmlElementFactory.trans2pnml(trans, id_map, layout)
+            page.node_list.append(pnml_trans)
+
+        # add edges, i.e., Arc, ResetArc, InhibitorArc
+        for edge in net.get_edges():
+            pnml_arc = PnmlElementFactory.arc2pnml(edge, id_map, layout)
+            page.arc_list.append(pnml_arc)
+
+        return page
+
+    @staticmethod
     def create_place():
         return PnmlPlace()
+
+    @staticmethod
+    def place2pnml(place, id_map, marking=None, layout=None):
+        pnml_place = PnmlPlace()
+        pnml_place.add_id(id_map, element=place)
+        pnml_place.add_node_graphics(place, layout=layout)
+        pnml_place.add_name(place.label)
+
+        # only create pnml initial marking if there is marking
+        if marking is not None:
+            pnml_place.initial_marking = PnmlElementFactory.init_marking2pnml(place, marking, layout)
+
+        tool_specific = PnmlElementFactory.node2tool_specific(place)
+        pnml_place.tool_specific_list.append(tool_specific)
+        return pnml_place
 
     @staticmethod
     def create_ref_place():
@@ -93,8 +228,31 @@ class PnmlElementFactory:
         return PnmlTransition()
 
     @staticmethod
+    def trans2pnml(trans, id_map, layout=None):
+        pnml_trans = PnmlTransition()
+        pnml_trans.add_node_graphics(trans, layout)
+        pnml_trans.add_id(id_map, element=trans)
+        pnml_trans.add_name(trans.label)
+        tool_specific = PnmlElementFactory.node2tool_specific(trans)
+        pnml_trans.tool_specific_list.append(tool_specific)
+        return pnml_trans
+
+    @staticmethod
     def create_tool_specific():
         return PnmlToolSpecific()
+
+    @staticmethod
+    def node2tool_specific(node):
+        # todo: stop lying here, it's generated from PODSpy, but need to be parsed in ProM tool_specific.tool = PnmlToolSpecific.PROM
+        tool_specific = PnmlToolSpecific()
+        tool_specific.tool = PnmlToolSpecific.PROM
+        tool_specific.version = PnmlToolSpecific.PROM_VERSION
+        tool_specific.local_node_id = str(node.local_id) if node.local_id is not None else None
+
+        if isinstance(node, PetrinetNode):
+            tool_specific.activity = node.label
+
+        return tool_specific
 
 
 class PnmlAnnotation(PnmlElement):
