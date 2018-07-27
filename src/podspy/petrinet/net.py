@@ -74,7 +74,7 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
     def remove_reset_arc(self, p, t):
         self.remove_from_edges(p, t, self.reset_arcs)
 
-    def add_inhibitor_arc(self, p, t, label):
+    def add_inhibitor_arc(self, p, t, label=None):
         self.check_add_edge(p, t)
         label = '{} ---O {}'.format(p, t) if label is None else label
         a = InhibitorArc(p, t, label)
