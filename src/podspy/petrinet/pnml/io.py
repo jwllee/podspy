@@ -104,3 +104,5 @@ def export_net(net, file, marking=None, final_markings=None, layout=None):
     string = etree.tostring(root, encoding=encoding, pretty_print=pretty_print)
 
     file.write(string.decode())
+
+    return root, pnml, id_map
