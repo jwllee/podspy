@@ -87,7 +87,7 @@ def apnet2pnml(net, layout=None):
     return ptnet2pnml(net.net, net.init_marking, net.final_markings, layout)
 
 
-def export_pnml_to_file(net, file, marking=None, final_markings=None, layout=None):
+def export_net(net, file, marking=None, final_markings=None, layout=None):
     if isinstance(net, AbstractResetInhibitorNet):
         pnml, id_map = ptnet2pnml(net, marking, final_markings, layout)
     elif isinstance(net, AcceptingPetrinet):

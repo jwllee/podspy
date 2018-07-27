@@ -109,13 +109,13 @@ def test_export_petrinet_without_layout(net_fp):
 
     out_f = StringIO('out_f')
 
-    io.export_pnml_to_file(apnet, out_f)
+    io.export_net(apnet, out_f)
 
     with open(net_fp, 'r') as f:
         expected = f.read()
 
     with open('./parsed.pnml', 'w') as f:
-        io.export_pnml_to_file(apnet, f)
+        io.export_net(apnet, f)
 
     assert expected == out_f.getvalue()
 
@@ -133,7 +133,7 @@ def test_export_petrinet_with_layout(net_fp):
 
     out_f = StringIO('out_f')
 
-    io.export_pnml_to_file(apnet, out_f, layout=G)
+    io.export_net(apnet, out_f, layout=G)
 
     with open(net_fp, 'r') as f:
         expected = f.read()
