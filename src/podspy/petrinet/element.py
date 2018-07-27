@@ -113,7 +113,7 @@ class InhibitorArc(PetrinetEdge):
 
 
 class ResetArc(PetrinetEdge):
-    def __int__(self, src, target, label, *args, **kwargs):
+    def __init__(self, src, target, label, *args, **kwargs):
         super().__init__(src, target, label, *args, **kwargs)
         self.map[attrib.EDGEEND] = attrib.ARROWTYPE_SIMPLE
         self.map[attrib.EDGEENDFILLED] = False
