@@ -9,12 +9,15 @@ reading xes log files.
 
 import os
 import pandas as pd
-from opyenxes.data_in.XUniversalParser import XUniversalParser
 
+
+from opyenxes.data_in.XUniversalParser import XUniversalParser
+from opyenxes.factory.XFactory import XFactory
+
+from .constant import *
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
-
 
 
 def read_event_log_file(log_filepath):
@@ -74,3 +77,20 @@ def optimize_df_dtypes(df, threshold=0.5, inplace=True):
 
     if not inplace:
         return downcasted
+
+
+def make_xattribute(attr_type, key, value, extension):
+    mapping = {
+        DISCRETE: XFactory.create_attribute_discrete,
+        LITERAL: XFactory.create_attribute_literal,
+        CONTINUOUS: XFactory.create_attribute_continuous,
+        BOOLEAN: XFactory.create_attribute_boolean,
+        TIMESTAMP: XFactory.create_attribute_timestamp
+    }
+    
+    if extension != None:
+        xattribute = mapping[attr_type](key, value, extension)
+    else:
+        xattribute = mapping[attr_type](key, value)
+        
+    return xattribute
