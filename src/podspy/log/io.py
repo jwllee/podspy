@@ -11,6 +11,8 @@ from lxml import etree
 import logging, uuid
 from urllib.parse import urlparse
 from podspy.util import conversion
+import pandas as pd
+import numpy as np
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -302,3 +304,28 @@ def parse_list_attrib_elem(elem):
 
 def parse_container_attrib_elem(elem):
     logger.warning('Container XAttribute is not supported')
+
+
+def parse_event_elem(elem):
+    assert elem.tag == 'event', 'Element has tag: {}'.format(elem.tag)
+
+    attribs = dict()
+
+    _map = {
+        'string': parse_literal_attrib_elem,
+        'boolean': parse_bool_attrib_elem,
+        'int': parse_discrete_attrib_elem,
+        'float': parse_continuous_attrib_elem,
+        'date': parse_timestamp_attrib_elem,
+        'id': parse_id_attrib_elem
+    }
+
+    for child in elem:
+        if child.tag in _map:
+            key, value = _map[child.tag](child)
+            attribs[key] = value
+        else:
+            logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
+
+    ss = pd.Series(attribs)
+    return ss
