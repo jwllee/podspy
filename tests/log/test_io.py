@@ -200,3 +200,53 @@ def test_parse_timestamp_attrib_elem(timestamp_attrib_elem):
     assert parsed[1] == expected_val
 
 
+@pytest.fixture
+def global_trace_attrib():
+    string = '<global scope="trace">' \
+                 '<date key="REG_DATE" value="1970-01-01T00:00:00.000+01:00"/>' \
+                 '<string key="AMOUNT_REQ" value="UNKNOWN"/>' \
+                 '<string key="concept:name" value="UNKNOWN"/>' \
+             '</global>'
+    expected_scope = 'trace'
+    expected_attrib_dict = {
+        'REG_DATE': datetime.strptime('1970-01-01T00:00:00.000', '%Y-%m-%dT%H:%M:%S.%f').replace(
+                tzinfo=timezone(timedelta(hours=1))),
+        'AMOUNT_REQ': 'UNKNOWN',
+        'concept:name': 'UNKNOWN'
+    }
+
+    return etree.fromstring(string), expected_scope, expected_attrib_dict
+
+
+@pytest.fixture
+def global_event_attrib():
+    string = '<global scope="event">' \
+                 '<date key="time:timestamp" value="1970-01-01T00:00:00.000+01:00"/>' \
+                 '<string key="lifecycle:transition" value="UNKNOWN"/>' \
+                 '<string key="concept:name" value="UNKNOWN"/>' \
+             '</global>'
+    expected_scope = 'event'
+    expected_attrib_dict = {
+        'time:timestamp': datetime.strptime('1970-01-01T00:00:00.000', '%Y-%m-%dT%H:%M:%S.%f').replace(
+                tzinfo=timezone(timedelta(hours=1))),
+        'lifecycle:transition': 'UNKNOWN',
+        'concept:name': 'UNKNOWN'
+    }
+
+    return etree.fromstring(string), expected_scope, expected_attrib_dict
+
+
+def test_parse_global_trace_attrib(global_trace_attrib):
+    parsed = io.parse_global_attrib_elem(global_trace_attrib[0])
+
+    assert len(parsed) == 2
+    assert parsed[0] == global_trace_attrib[1]
+    assert parsed[1] == global_trace_attrib[2]
+
+
+def test_parse_global_event_attrib(global_event_attrib):
+    parsed = io.parse_global_attrib_elem(global_event_attrib[0])
+
+    assert len(parsed) == 2
+    assert parsed[0] == global_event_attrib[1]
+    assert parsed[1] == global_event_attrib[2]
