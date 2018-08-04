@@ -329,3 +329,33 @@ def parse_event_elem(elem):
 
     ss = pd.Series(attribs)
     return ss
+
+
+def parse_trace_elem(elem):
+    assert elem.tag == 'trace', 'Element has tag: {}'.format(elem.tag)
+
+    event_df = pd.DataFrame()
+    attribs = dict()
+
+    _map = {
+        'string': parse_literal_attrib_elem,
+        'boolean': parse_bool_attrib_elem,
+        'int': parse_discrete_attrib_elem,
+        'float': parse_continuous_attrib_elem,
+        'date': parse_timestamp_attrib_elem,
+        'id': parse_id_attrib_elem
+    }
+
+    for child in elem:
+        if child.tag in _map:
+            key, value = _map[child.tag](child)
+            attribs[key] = value
+        elif child.tag == 'event':
+            event_ss = parse_event_elem(child)
+            event_df = event_df.append(event_ss, ignore_index=True)
+        else:
+            logger.warning('Skipping unsupported child type {}: \n{}'.format(child.tag, child))
+
+    ss = pd.Series(attribs)
+
+    return ss, event_df
