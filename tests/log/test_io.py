@@ -11,6 +11,9 @@ import pytest, uuid
 from lxml import etree
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
+import pandas as pd
+import numpy as np
+
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
@@ -250,3 +253,33 @@ def test_parse_global_event_attrib(global_event_attrib):
     assert len(parsed) == 2
     assert parsed[0] == global_event_attrib[1]
     assert parsed[1] == global_event_attrib[2]
+
+
+@pytest.fixture(ids=lambda s: str(s[1]), params=[
+    # event 0
+    ('<event>'
+        '<int key="org:resource" value="112"/>'
+        '<string key="lifecycle:transition" value="COMPLETE"/>'
+        '<string key="concept:name" value="A_SUBMITTED"/>'
+    '</event>', {
+        'org:resource': 112, 'lifecycle:transition': 'COMPLETE', 'concept:name': 'A_SUBMITTED'
+    }),
+    # event 1
+    ('<event>'
+         '<int key="org:resource" value="100"/>'
+         '<string key="lifecycle:transition" value="START"/>'
+         '<string key="concept:name" value="O_SENT"/>'
+     '</event>', {
+        'org:resource': 100, 'lifecycle:transition': 'START', 'concept:name': 'O_SENT'
+    })
+])
+def xevent(request):
+    return etree.fromstring(request.param[0]), request.param[1]
+
+
+def test_parse_event_elem(xevent):
+    parsed = io.parse_event_elem(xevent[0])
+
+    assert isinstance(parsed, pd.Series)
+    dict_val = parsed.to_dict()
+    assert dict_val == xevent[1]
