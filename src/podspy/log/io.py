@@ -31,6 +31,9 @@ def import_logtable_from_xesfile(f):
         pass
 
 
+    # use df.append(ss, ignore_index=True) to append series rows to dataframe
+
+
 def parse_classifier_elem(elem, d=None):
     """Parse a XES classifier element as a dict
 
@@ -165,6 +168,9 @@ def parse_literal_attrib_elem(elem):
     key = elem.attrib['key']
     value = elem.attrib['value']
 
+    if len(elem):
+        parse_list_attrib_elem(elem)
+
     return key, value
 
 
@@ -189,6 +195,9 @@ def parse_bool_attrib_elem(elem):
         logger.warning('Do not recognize boolean value: {}, use default value: {}'.format(value, False))
         bool_val = False
 
+    if len(elem):
+        parse_list_attrib_elem(elem)
+
     return key, bool_val
 
 
@@ -210,6 +219,9 @@ def parse_discrete_attrib_elem(elem):
     except ValueError as e:
         logger.error('Cannot convert {} as int: {}'.format(value, e))
         int_value = 0
+
+    if len(elem):
+        parse_list_attrib_elem(elem)
 
     return key, int_value
 
@@ -233,6 +245,9 @@ def parse_continuous_attrib_elem(elem):
         logger.error('Cannot convert {} as float: {}'.format(value, e))
         float_value = 0.
 
+    if len(elem):
+        parse_list_attrib_elem(elem)
+
     return key, float_value
 
 
@@ -249,6 +264,9 @@ def parse_timestamp_attrib_elem(elem):
     key = elem.attrib['key']
     value = elem.attrib['value']
     time = conversion.parse_timestamp(value)
+
+    if len(elem):
+        parse_list_attrib_elem(elem)
 
     return key, time
 
@@ -271,6 +289,9 @@ def parse_id_attrib_elem(elem):
     except ValueError as e:
         logger.error('Cannot convert {} as uuid: {}'.format(value, e))
         id_value = value
+
+    if len(elem):
+        parse_list_attrib_elem(elem)
 
     return key, id_value
 
