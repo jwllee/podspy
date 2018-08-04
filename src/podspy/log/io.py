@@ -8,8 +8,9 @@ This module contains methods to do io operations for log data.
 
 from .table import LogTable
 from lxml import etree
-import logging
+import logging, uuid
 from urllib.parse import urlparse
+from podspy.util import conversion
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -118,3 +119,134 @@ def parse_extension_elem(elem, d=None):
 
     d[name] = (name, prefix, uri)
     return d
+
+
+def parse_literal_attrib_elem(elem):
+    """Parse an element of a XAttributeLiteral
+
+    :param elem: element to parse
+    :return: the key and literal value
+    """
+    assert elem.tag == 'string', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'Literal attribute has no key'
+    assert 'value' in elem.attrib, 'Literal attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value']
+
+    return key, value
+
+
+def parse_bool_attrib_elem(elem):
+    """Parse an element of a XAttributeBoolean
+
+    :param elem: element to parse
+    :return: the key and boolean value
+    """
+    assert elem.tag == 'boolean', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'Boolean attribute has no key'
+    assert 'value' in elem.attrib, 'Boolean attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value'].lower()
+
+    if value == 'true':
+        bool_val = True
+    elif value == 'false':
+        bool_val = False
+    else:
+        logger.warning('Do not recognize boolean value: {}, use default value: {}'.format(value, False))
+        bool_val = False
+
+    return key, bool_val
+
+
+def parse_discrete_attrib_elem(elem):
+    """Parse an element of a XAttributeDiscrete
+
+    :param elem: element to parse
+    :return: a tuple containing the key and discrete value
+    """
+    assert elem.tag == 'int', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'Discrete attribute has no key'
+    assert 'value' in elem.attrib, 'Discrete attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value']
+
+    try:
+        int_value = int(value)
+    except ValueError as e:
+        logger.error('Cannot convert {} as int: {}'.format(value, e))
+        int_value = 0
+
+    return key, int_value
+
+
+def parse_continuous_attrib_elem(elem):
+    """Parse an element of a XAttributeContinuous
+
+    :param elem: element to parse
+    :return: a tuple containing the key and continuous value
+    """
+    assert elem.tag == 'float', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'Continuous attribute has no key'
+    assert 'value' in elem.attrib, 'Continuous attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value']
+
+    try:
+        float_value = float(value)
+    except ValueError as e:
+        logger.error('Cannot convert {} as float: {}'.format(value, e))
+        float_value = 0.
+
+    return key, float_value
+
+
+def parse_timestamp_attrib_elem(elem):
+    """Parse an element of a XAttributeTimestamp
+
+    :param elem: element to parse
+    :return: a tuple containing the key and datetime value
+    """
+    assert elem.tag == 'date', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'Timestamp attribute has no key'
+    assert 'value' in elem.attrib, 'Timestamp attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value']
+    time = conversion.parse_timestamp(value)
+
+    return key, time
+
+
+def parse_id_attrib_elem(elem):
+    """Parse an element of a XAttributeID
+
+    :param elem: element to parse
+    :return: a tuple containing the key and id value
+    """
+    assert elem.tag == 'id', 'Element has tag: {}'.format(elem.tag)
+    assert 'key' in elem.attrib, 'ID attribute has no key'
+    assert 'value' in elem.attrib, 'ID attribute has no value'
+
+    key = elem.attrib['key']
+    value = elem.attrib['value']
+
+    try:
+        id_value = uuid.UUID(value)
+    except ValueError as e:
+        logger.error('Cannot convert {} as uuid: {}'.format(value, e))
+        id_value = value
+
+    return key, id_value
+
+
+def parse_list_attrib_elem(elem):
+    logger.warning('List XAttribute is not supported')
+
+
+def parse_container_attrib_elem(elem):
+    logger.warning('Container XAttribute is not supported')
