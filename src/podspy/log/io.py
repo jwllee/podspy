@@ -121,6 +121,37 @@ def parse_extension_elem(elem, d=None):
     return d
 
 
+def parse_global_attrib_elem(elem):
+    """Parse an element containing global attributes, can be either related to trace or event
+
+    :param elem: element to parse
+    :return: dictionary mapping attribute key to attribute value
+    """
+    assert elem.tag == 'global', 'Element has tag: {}'.format(elem.tag)
+    assert 'scope' in elem.attrib, 'Global attribute has no scope'
+
+    scope = elem.attrib['scope']
+    attribs = dict()
+
+    _map = {
+        'string': parse_literal_attrib_elem,
+        'boolean': parse_bool_attrib_elem,
+        'int': parse_discrete_attrib_elem,
+        'float': parse_continuous_attrib_elem,
+        'date': parse_timestamp_attrib_elem,
+        'id': parse_id_attrib_elem
+    }
+
+    for child in elem:
+        if child.tag in _map:
+            key, value = _map[child.tag](child)
+            attribs[key] = value
+        else:
+            logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
+
+    return scope, attribs
+
+
 def parse_literal_attrib_elem(elem):
     """Parse an element of a XAttributeLiteral
 
