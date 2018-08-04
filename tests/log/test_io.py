@@ -283,3 +283,77 @@ def test_parse_event_elem(xevent):
     assert isinstance(parsed, pd.Series)
     dict_val = parsed.to_dict()
     assert dict_val == xevent[1]
+
+
+@pytest.fixture(ids=lambda s: str(s[1]), params=[
+    # trace 0
+    ('<trace>'
+         '<date key="REG_DATE" value="2011-10-01T08:10:30.287+02:00"/>'
+         '<string key="concept:name" value="173694"/>'
+         '<string key="AMOUNT_REQ" value="7000"/>'
+         '<event>'
+             '<string key="concept:name" value="A_SUBMITTED"/>'
+             '<string key="lifecycle:transition" value="COMPLETE"/>'
+         '</event>'
+         '<event>'
+             '<string key="concept:name" value="A_PARTLYSUBMITTED"/>'
+         '</event>'
+         '<event>'
+             '<string key="concept:name" value="A_ACCEPTED"/>'
+         '</event>'
+     '</trace>',
+    {
+        'REG_DATE': datetime.strptime('2011-10-01T08:10:30.287', '%Y-%m-%dT%H:%M:%S.%f').replace(
+                tzinfo=timezone(timedelta(hours=2))),
+        'concept:name': '173694',
+        'AMOUNT_REQ': '7000'
+    },
+    # check using df.to_dict(orient='list')
+    {
+         'concept:name': ['A_SUBMITTED', 'A_PARTLYSUBMITTED', 'A_ACCEPTED'],
+         'lifecycle:transition': ['COMPLETE', np.nan, np.nan]
+    }),
+    # trace 1
+    ('<trace>'
+         '<date key="REG_DATE" value="2011-10-01T08:11:08.865+02:00"/>'
+         '<string key="concept:name" value="173697"/>'
+         '<string key="AMOUNT_REQ" value="15000"/>'
+         '<event>'
+             '<string key="concept:name" value="A_SUBMITTED"/>'
+             '<string key="lifecycle:transition" value="COMPLETE"/>'
+         '</event>'
+         '<event>'
+             '<string key="concept:name" value="A_DECLINED"/>'
+         '</event>'
+     '</trace>',
+    {
+        'REG_DATE': datetime.strptime('2011-10-01T08:11:08.865', '%Y-%m-%dT%H:%M:%S.%f').replace(
+            tzinfo=timezone(timedelta(hours=2))),
+        'concept:name': '173697',
+        'AMOUNT_REQ': '15000'
+    },
+    {
+         'concept:name': ['A_SUBMITTED', 'A_DECLINED'],
+         'lifecycle:transition': ['COMPLETE', np.nan]
+    })
+])
+def xtrace(request):
+    return etree.fromstring(request.param[0]), request.param[1], request.param[2]
+
+
+def test_parse_xtrace_elem(xtrace):
+    parsed = io.parse_trace_elem(xtrace[0])
+
+    assert len(parsed) == 2
+
+    trace_row = parsed[0]
+    event_df = parsed[1]
+
+    assert isinstance(trace_row, pd.Series)
+    assert isinstance(event_df, pd.DataFrame)
+
+    trace_row_dict = trace_row.to_dict()
+    assert trace_row_dict == xtrace[1]
+
+    event_df_dict = event_df.to_dict(orient='list')
+    assert event_df_dict == xtrace[2]
