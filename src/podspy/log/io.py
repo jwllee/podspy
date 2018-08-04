@@ -9,6 +9,7 @@ This module contains methods to do io operations for log data.
 from .table import LogTable
 from lxml import etree
 import logging
+from urllib.parse import urlparse
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -94,4 +95,26 @@ def parse_classifier_elem(elem, d=None):
     keylist = get_keylist(keys, known_keys)
     d[name] = keylist
 
+    return d
+
+
+def parse_extension_elem(elem, d=None):
+    """Parses an element containing information of an XExtension
+
+    :param elem: Element to parse
+    :param d: dictionary to put the parsed extension information
+    :return: modified dictionary
+    """
+    d = d if d is not None else dict()
+
+    assert elem.tag == 'extension', 'Element has tag: {}'.format(elem.tag)
+    assert 'name' in elem.attrib, 'Extension element has no name'
+    assert 'prefix' in elem.attrib, 'Extension element has no prefix'
+    assert 'uri' in elem.attrib, 'Extension element has no uri'
+
+    name = elem.attrib['name']
+    prefix = elem.attrib['prefix']
+    uri = urlparse(elem.attrib['uri'])
+
+    d[name] = (name, prefix, uri)
     return d
