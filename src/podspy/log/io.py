@@ -307,6 +307,11 @@ def parse_container_attrib_elem(elem):
 
 
 def parse_event_elem(elem):
+    """Parses an element contianing a :class:`opyenxes.model.XEvent.XEvent`.
+
+    :param elem: element to parse
+    :return: a series containing event info
+    """
     assert elem.tag == 'event', 'Element has tag: {}'.format(elem.tag)
 
     attribs = dict()
@@ -332,6 +337,11 @@ def parse_event_elem(elem):
 
 
 def parse_trace_elem(elem):
+    """Parses an element containing a :class:`opyenxes.model.XTrace.XTrace`.
+
+    :param elem: element to parse
+    :return: a series row containing trace info, and a dataframe containing event info
+    """
     assert elem.tag == 'trace', 'Element has tag: {}'.format(elem.tag)
 
     event_df = pd.DataFrame()
