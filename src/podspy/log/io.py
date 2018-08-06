@@ -22,6 +22,23 @@ __email__ = "walee@uc.cl"
 logger = logging.getLogger(__file__)
 
 
+# tags
+TAG_LOG = 'log'
+TAG_TRACE = 'trace'
+TAG_EVENT = 'event'
+TAG_EXTENSION = 'extension'
+TAG_CLASSIFIER = 'classifier'
+TAG_GLOBAL = 'global'
+
+TAG_FLOAT = 'float'
+TAG_BOOL = 'boolean'
+TAG_DISC = 'int'
+TAG_ID = 'id'
+TAG_LITERAL = 'string'
+TAG_TIMESTAMP = 'date'
+TAG_CONTAINER = 'container'
+
+
 def import_logtable_from_xesfile(f):
     """Import a log table from a xes file
 
@@ -29,11 +46,120 @@ def import_logtable_from_xesfile(f):
     :return: a log table
     """
     context = etree.iterparse(f, events=('end',))
+
+    lt = None
     for event, elem in context:
-        pass
+        if elem.tag == TAG_LOG:
+            lt = parse_log_elem(elem)
+        else:
+            logger.warning('Element with tag: {} is not processed'.format(elem.tag))
+    return lt
 
 
+def __is_attrib_tag(tag):
+    attrib_tags = [
+        TAG_FLOAT, TAG_BOOL, TAG_DISC, TAG_ID, TAG_LITERAL, TAG_TIMESTAMP, TAG_CONTAINER
+    ]
+    return tag in attrib_tags
+
+
+def parse_log_elem(elem):
     # use df.append(ss, ignore_index=True) to append series rows to dataframe
+
+    logger.debug('Element: {}'.format(elem))
+
+    # logger.debug('XES attributes: {}'.format(xes_attribs))
+
+    extensions = dict()
+    classifiers = dict()
+    global_trace_attribs = None
+    global_event_attribs = None
+    log_attribs = dict()
+    xes_attribs = dict()
+
+    trace_df = pd.DataFrame()
+    event_df = pd.DataFrame()
+
+    _map = {
+        'string': parse_literal_attrib_elem,
+        'boolean': parse_bool_attrib_elem,
+        'int': parse_discrete_attrib_elem,
+        'float': parse_continuous_attrib_elem,
+        'date': parse_timestamp_attrib_elem,
+        'id': parse_id_attrib_elem
+    }
+
+    element = None
+    reading_elem = False
+
+    for event, child in elem:
+        logger.debug('Event: {} Child: {}'.format(event, child))
+        # logger.debug('Processing element with tag: {}'.format(child.tag))
+        qname = etree.QName(child.tag)
+        tag = qname.localname
+
+        if event == 'start' and tag != TAG_LOG and not reading_elem:
+            logger.debug('Start reading {}'.format(tag))
+            # start reading an element
+            element = tag
+            reading_elem = True
+
+        if not(tag == element and event == 'end') and reading_elem:
+            logger.debug('Continuing reading {}'.format(element))
+            continue
+        else:
+            element = None
+            reading_elem = False
+
+        if tag == TAG_EXTENSION and event == 'end':
+            logger.debug('Parsing {} element'.format(tag))
+            extensions = parse_extension_elem(child, extensions)
+
+        elif tag == TAG_CLASSIFIER and event == 'end':
+            logger.debug('Parsing {} element'.format(tag))
+            classifiers = parse_classifier_elem(child, classifiers)
+
+        elif tag == TAG_GLOBAL and event == 'end':
+            logger.debug('Parsing {} element'.format(tag))
+            scope, attribs = parse_global_attrib_elem(child)
+            if scope == TAG_TRACE:
+                global_trace_attribs = attribs
+                logger.debug('Global trace attribs: {}'.format(global_trace_attribs))
+            elif scope == TAG_EVENT:
+                global_event_attribs = attribs
+                logger.debug('Global event attribs: {}'.format(global_event_attribs))
+
+        elif __is_attrib_tag(tag) and event == 'end':
+            logger.debug('Parsing {} element'.format(tag))
+            key, val = _map[tag](child)
+            log_attribs[key] = val
+
+        elif tag == TAG_TRACE and event == 'end':
+            logger.debug('Parsing {} element'.format(tag))
+            trace_ss, trace_event_df = parse_trace_elem(child)
+            trace_df = trace_df.append(trace_ss, ignore_index=True)
+            event_df = pd.concat([event_df, trace_event_df], axis='index')
+
+            # remove the child
+            # child.clear()
+
+            # also eliminate now-empty references from the root node to child
+            # while child.getprevious() is not None:
+            #     del child.getparent()[0]
+        elif tag == TAG_LOG:
+            logger.debug('Parsing {} element'.format(tag))
+            xes_attribs = dict(child.attrib)
+
+    logger.debug('Log attribs: {}'.format(log_attribs))
+    logger.debug('Event df: \n{}'.format(event_df))
+
+    lt = LogTable(trace_df=trace_df, event_df=event_df, attributes=log_attribs,
+                  global_trace_attributes=global_trace_attribs,
+                  global_event_attributes=global_event_attribs,
+                  classifiers=classifiers, extensions=extensions)
+    lt.xes_attributes = xes_attribs
+
+    return lt
 
 
 def parse_classifier_elem(elem, d=None):
@@ -45,7 +171,9 @@ def parse_classifier_elem(elem, d=None):
     """
     d = d if d is not None else dict()
 
-    assert elem.tag == 'classifier', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'classifier', 'Element has tag: {}'.format(tag)
     assert 'name' in elem.attrib, 'Classifier element has no name'
     assert 'keys' in elem.attrib, 'Classifier element has no keys'
 
@@ -113,7 +241,9 @@ def parse_extension_elem(elem, d=None):
     """
     d = d if d is not None else dict()
 
-    assert elem.tag == 'extension', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'extension', 'Element has tag: {}'.format(tag)
     assert 'name' in elem.attrib, 'Extension element has no name'
     assert 'prefix' in elem.attrib, 'Extension element has no prefix'
     assert 'uri' in elem.attrib, 'Extension element has no uri'
@@ -132,7 +262,9 @@ def parse_global_attrib_elem(elem):
     :param elem: element to parse
     :return: dictionary mapping attribute key to attribute value
     """
-    assert elem.tag == 'global', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'global', 'Element has tag: {}'.format(tag)
     assert 'scope' in elem.attrib, 'Global attribute has no scope'
 
     scope = elem.attrib['scope']
@@ -148,8 +280,10 @@ def parse_global_attrib_elem(elem):
     }
 
     for child in elem:
-        if child.tag in _map:
-            key, value = _map[child.tag](child)
+        qname = etree.QName(child.tag)
+        tag = qname.localname
+        if tag in _map:
+            key, value = _map[tag](child)
             attribs[key] = value
         else:
             logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
@@ -163,7 +297,9 @@ def parse_literal_attrib_elem(elem):
     :param elem: element to parse
     :return: the key and literal value
     """
-    assert elem.tag == 'string', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'string', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'Literal attribute has no key'
     assert 'value' in elem.attrib, 'Literal attribute has no value'
 
@@ -182,7 +318,9 @@ def parse_bool_attrib_elem(elem):
     :param elem: element to parse
     :return: the key and boolean value
     """
-    assert elem.tag == 'boolean', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'boolean', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'Boolean attribute has no key'
     assert 'value' in elem.attrib, 'Boolean attribute has no value'
 
@@ -209,7 +347,9 @@ def parse_discrete_attrib_elem(elem):
     :param elem: element to parse
     :return: a tuple containing the key and discrete value
     """
-    assert elem.tag == 'int', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'int', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'Discrete attribute has no key'
     assert 'value' in elem.attrib, 'Discrete attribute has no value'
 
@@ -234,7 +374,9 @@ def parse_continuous_attrib_elem(elem):
     :param elem: element to parse
     :return: a tuple containing the key and continuous value
     """
-    assert elem.tag == 'float', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'float', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'Continuous attribute has no key'
     assert 'value' in elem.attrib, 'Continuous attribute has no value'
 
@@ -259,7 +401,9 @@ def parse_timestamp_attrib_elem(elem):
     :param elem: element to parse
     :return: a tuple containing the key and datetime value
     """
-    assert elem.tag == 'date', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'date', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'Timestamp attribute has no key'
     assert 'value' in elem.attrib, 'Timestamp attribute has no value'
 
@@ -279,7 +423,9 @@ def parse_id_attrib_elem(elem):
     :param elem: element to parse
     :return: a tuple containing the key and id value
     """
-    assert elem.tag == 'id', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'id', 'Element has tag: {}'.format(tag)
     assert 'key' in elem.attrib, 'ID attribute has no key'
     assert 'value' in elem.attrib, 'ID attribute has no value'
 
@@ -312,7 +458,9 @@ def parse_event_elem(elem):
     :param elem: element to parse
     :return: a series containing event info
     """
-    assert elem.tag == 'event', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'event', 'Element has tag: {}'.format(tag)
 
     attribs = dict()
 
@@ -326,8 +474,10 @@ def parse_event_elem(elem):
     }
 
     for child in elem:
-        if child.tag in _map:
-            key, value = _map[child.tag](child)
+        qname = etree.QName(child.tag)
+        tag = qname.localname
+        if tag in _map:
+            key, value = _map[tag](child)
             attribs[key] = value
         else:
             logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
@@ -342,7 +492,9 @@ def parse_trace_elem(elem):
     :param elem: element to parse
     :return: a series row containing trace info, and a dataframe containing event info
     """
-    assert elem.tag == 'trace', 'Element has tag: {}'.format(elem.tag)
+    qname = etree.QName(elem.tag)
+    tag = qname.localname
+    assert tag == 'trace', 'Element has tag: {}'.format(tag)
 
     event_df = pd.DataFrame()
     attribs = dict()
@@ -357,10 +509,12 @@ def parse_trace_elem(elem):
     }
 
     for child in elem:
-        if child.tag in _map:
-            key, value = _map[child.tag](child)
+        qname = etree.QName(child.tag)
+        tag = qname.localname
+        if tag in _map:
+            key, value = _map[tag](child)
             attribs[key] = value
-        elif child.tag == 'event':
+        elif tag == 'event':
             event_ss = parse_event_elem(child)
             event_df = event_df.append(event_ss, ignore_index=True)
         else:
