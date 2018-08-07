@@ -484,8 +484,11 @@ def log_elem(request):
 
 def test_parse_log_elem(log_elem):
     f = BytesIO(str.encode(log_elem[0]))
-    context = etree.iterparse(f, events=('start', 'end',))
+    context = etree.iterparse(f, events=('end',))
+    start = time.time()
     lt = io.parse_log_elem(context)
+    diff = time.time() - start
+    print('Time taken to parse log element: {} seconds'.format(diff))
 
     assert isinstance(lt, table.LogTable)
 
@@ -525,30 +528,64 @@ def test_parse_log_elem(log_elem):
 #     xlog_file = os.path.join('.', 'tests', 'testdata', 'BPIC2012.xes')
 #
 #     with open(xlog_file, 'rb') as f:
-#         context = etree.iterparse(f, events=('start', 'end'))
+#         context = etree.iterparse(f, events=('end',))
 #         lt = io.parse_log_elem(context)
 #
 #         assert isinstance(lt, table.LogTable)
 
 
-def test_iterparse():
-    xlog_file = os.path.join('.', 'tests', 'testdata', 'BPIC2012.xes')
+# def test_iterparse():
+#     xlog_file = os.path.join('.', 'tests', 'testdata', 'BPIC2012.xes')
+#
+#     def time_iterparse(context):
+#         start = time.time()
+#         for event, child in context:
+#             child.clear()
+#         end = time.time()
+#         diff = end - start
+#         print('Took {} seconds'.format(diff))
+#
+#     with open(xlog_file, 'rb') as f:
+#         context = etree.iterparse(f, events=('end',))
+#         time_iterparse(context)
+#
+#     with open(xlog_file, 'rb') as f:
+#         context = etree.iterparse(f, events=('start', 'end'))
+#         time_iterparse(context)
+#
+#     assert 0 == 1
 
-    def time_iterparse(context):
-        start = time.time()
-        for event, child in context:
-            child.clear()
-        end = time.time()
-        diff = end - start
-        print('Took {} seconds'.format(diff))
 
-    with open(xlog_file, 'rb') as f:
-        context = etree.iterparse(f, events=('end',))
-        time_iterparse(context)
+def test_getparent():
+    root = etree.Element('root')
+    child1 = etree.SubElement(root, 'child1')
+    child2 = etree.SubElement(root, 'child2')
+    child3 = etree.SubElement(root, 'child3')
 
-    with open(xlog_file, 'rb') as f:
-        context = etree.iterparse(f, events=('start', 'end'))
-        time_iterparse(context)
+    for child in root:
+        print('Element: {}'.format(child.tag))
 
-    assert 0 == 1
+    print('Removing child3')
+    del child3.getparent()[-1]
 
+    for child in root:
+        print('Element: {}'.format(child.tag))
+
+    # assert 1 == 0
+
+
+def test_iterparse_create_tree():
+    f = BytesIO(b'<root><child>hello world</child></root>')
+    context = etree.iterparse(f)
+
+    elem = None
+
+    for event, elem in context:
+        print('Event: {}, Child: {}'.format(event, elem))
+
+    print('Finished iterating..')
+
+    for child in elem:
+        print('Child: {}'.format(child))
+
+    # assert 1 == 0

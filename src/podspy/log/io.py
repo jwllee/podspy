@@ -64,10 +64,10 @@ def __is_attrib_tag(tag):
     return tag in attrib_tags
 
 
-def parse_log_elem(elem):
+def parse_log_elem(context):
     # use df.append(ss, ignore_index=True) to append series rows to dataframe
 
-    logger.debug('Element: {}'.format(elem))
+    # logger.debug('Element: {}'.format(context))
 
     # logger.debug('XES attributes: {}'.format(xes_attribs))
 
@@ -90,35 +90,37 @@ def parse_log_elem(elem):
         'id': parse_id_attrib_elem
     }
 
-    element = None
-    reading_elem = False
+    root = None
+    trace_df_dict = dict()
+    ind = 0
+    event_df_list = list()
 
-    for event, child in elem:
+    for event, child in context:
         logger.debug('Event: {} Child: {}'.format(event, child))
         # logger.debug('Processing element with tag: {}'.format(child.tag))
         qname = etree.QName(child.tag)
         tag = qname.localname
 
-        if event == 'start' and tag != TAG_LOG and not reading_elem:
-            logger.debug('Start reading {}'.format(tag))
-            # start reading an element
-            element = tag
-            reading_elem = True
+        if tag == TAG_TRACE:
+            logger.debug('Parsing {} element'.format(tag))
+            trace_ss, trace_event_df = parse_trace_elem(child)
+            # trace_df = trace_df.append(trace_ss, ignore_index=True)
+            trace_ss_dict = trace_ss.to_dict()
+            trace_df_dict[ind] = trace_ss_dict
+            ind += 1
+            # event_df = pd.concat([event_df, trace_event_df], axis='index')
+            event_df_list.append(trace_event_df)
+            child.clear()
 
-        if not(tag == element and event == 'end') and reading_elem:
-            logger.debug('Continuing reading {}'.format(element))
-            continue
-        else:
-            element = None
-            reading_elem = False
-
-        if tag == TAG_EXTENSION and event == 'end':
+        elif tag == TAG_EXTENSION:
             logger.debug('Parsing {} element'.format(tag))
             extensions = parse_extension_elem(child, extensions)
+            child.clear()
 
         elif tag == TAG_CLASSIFIER and event == 'end':
             logger.debug('Parsing {} element'.format(tag))
             classifiers = parse_classifier_elem(child, classifiers)
+            child.clear()
 
         elif tag == TAG_GLOBAL and event == 'end':
             logger.debug('Parsing {} element'.format(tag))
@@ -129,31 +131,28 @@ def parse_log_elem(elem):
             elif scope == TAG_EVENT:
                 global_event_attribs = attribs
                 logger.debug('Global event attribs: {}'.format(global_event_attribs))
+            child.clear()
 
-        elif __is_attrib_tag(tag) and event == 'end':
-            logger.debug('Parsing {} element'.format(tag))
+        elif tag == TAG_LOG:
+            root = child
+
+    event_df = pd.concat(event_df_list, axis='index')
+
+    # process log attributes
+    xes_attribs = dict(root.attrib)
+
+    for child in root:
+        qname = etree.QName(child.tag)
+        tag = qname.localname
+        logger.debug('Parsing element with tag: {}'.format(tag))
+        if __is_attrib_tag(tag):
             key, val = _map[tag](child)
             log_attribs[key] = val
 
-        elif tag == TAG_TRACE and event == 'end':
-            logger.debug('Parsing {} element'.format(tag))
-            trace_ss, trace_event_df = parse_trace_elem(child)
-            trace_df = trace_df.append(trace_ss, ignore_index=True)
-            event_df = pd.concat([event_df, trace_event_df], axis='index')
-
-            # remove the child
-            child.clear()
-
-            # # also eliminate now-empty references from the root node to child
-            # while child.getprevious() is not None:
-            #     del child.getparent()[0]
-
-        elif tag == TAG_LOG:
-            logger.debug('Parsing {} element'.format(tag))
-            xes_attribs = dict(child.attrib)
-
     logger.debug('Log attribs: {}'.format(log_attribs))
     logger.debug('Event df: \n{}'.format(event_df))
+
+    trace_df = pd.DataFrame.from_dict(trace_df_dict, 'index')
 
     lt = LogTable(trace_df=trace_df, event_df=event_df, attributes=log_attribs,
                   global_trace_attributes=global_trace_attribs,
@@ -499,6 +498,7 @@ def parse_trace_elem(elem):
     assert tag == 'trace', 'Element has tag: {}'.format(tag)
 
     event_df = pd.DataFrame()
+    event_df_dict = dict()
     attribs = dict()
 
     _map = {
@@ -510,6 +510,8 @@ def parse_trace_elem(elem):
         'id': parse_id_attrib_elem
     }
 
+    ind = 0
+
     for child in elem:
         qname = etree.QName(child.tag)
         tag = qname.localname
@@ -518,11 +520,16 @@ def parse_trace_elem(elem):
             attribs[key] = value
         elif tag == 'event':
             event_ss = parse_event_elem(child)
-            event_df = event_df.append(event_ss, ignore_index=True)
+            event_ss_dict = event_ss.to_dict()
+            # logger.debug('Event series dict: {}'.format(event_ss_dict))
+            event_df_dict[ind] = event_ss_dict
+            # event_df = event_df.append(event_ss, ignore_index=True)
+            ind += 1
         else:
             logger.warning('Skipping unsupported child type {}: \n{}'.format(child.tag, child))
 
     ss = pd.Series(attribs)
+    event_df = pd.DataFrame.from_dict(event_df_dict, 'index')
 
     # add caseid to event_df
     assert 'concept:name' in attribs, 'concept:name (caseid) is missing'
