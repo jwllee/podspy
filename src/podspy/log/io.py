@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from podspy.util import conversion
 import pandas as pd
 import numpy as np
+from podspy.log import constant as const
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -141,11 +142,12 @@ def parse_log_elem(elem):
             event_df = pd.concat([event_df, trace_event_df], axis='index')
 
             # remove the child
-            # child.clear()
+            child.clear()
 
-            # also eliminate now-empty references from the root node to child
+            # # also eliminate now-empty references from the root node to child
             # while child.getprevious() is not None:
             #     del child.getparent()[0]
+
         elif tag == TAG_LOG:
             logger.debug('Parsing {} element'.format(tag))
             xes_attribs = dict(child.attrib)
@@ -521,5 +523,11 @@ def parse_trace_elem(elem):
             logger.warning('Skipping unsupported child type {}: \n{}'.format(child.tag, child))
 
     ss = pd.Series(attribs)
+
+    # add caseid to event_df
+    assert 'concept:name' in attribs, 'concept:name (caseid) is missing'
+    event_df[const.CASEID] = attribs['concept:name']
+
+    print('Parsed trace with caseid: {}'.format(attribs['concept:name']))
 
     return ss, event_df

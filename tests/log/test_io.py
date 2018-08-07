@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 import numpy as np
+import os, sys, time
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -30,7 +31,7 @@ __email__ = "walee@uc.cl"
 ])
 def classifier_elem(request):
     # need to convert it as etree element
-    return etree.fromstring(request.param[0]), request.param[1], request.param[2], request.param[3]
+    return request.param
 
 
 def test_check_classifier_elem_fixture(classifier_elem):
@@ -39,7 +40,9 @@ def test_check_classifier_elem_fixture(classifier_elem):
 
 def test_parse_classifier_elem(classifier_elem):
     existing_clf_dict = classifier_elem[3]
-    d = io.parse_classifier_elem(classifier_elem[0], existing_clf_dict)
+
+    elem = etree.fromstring(classifier_elem[0])
+    d = io.parse_classifier_elem(elem, existing_clf_dict)
 
     expected_name = classifier_elem[1]
     expected_clf_keys = classifier_elem[2]
@@ -311,6 +314,7 @@ def test_parse_event_elem(xevent):
     },
     # check using df.to_dict(orient='list')
     {
+         constant.CASEID: ['173694', '173694', '173694'],
          'concept:name': ['A_SUBMITTED', 'A_PARTLYSUBMITTED', 'A_ACCEPTED'],
          'lifecycle:transition': ['COMPLETE', np.nan, np.nan]
     }),
@@ -334,6 +338,7 @@ def test_parse_event_elem(xevent):
         'AMOUNT_REQ': '15000'
     },
     {
+         constant.CASEID: ['173697', '173697'],
          'concept:name': ['A_SUBMITTED', 'A_DECLINED'],
          'lifecycle:transition': ['COMPLETE', np.nan]
     })
@@ -514,3 +519,36 @@ def test_parse_log_elem(log_elem):
     assert global_event_attrib == expected_global_event_attribs
     assert trace_df_dict == expected_trace_df_dict
     assert event_df_dict == expected_event_df_dict
+
+
+# def test_parse_bpic2012():
+#     xlog_file = os.path.join('.', 'tests', 'testdata', 'BPIC2012.xes')
+#
+#     with open(xlog_file, 'rb') as f:
+#         context = etree.iterparse(f, events=('start', 'end'))
+#         lt = io.parse_log_elem(context)
+#
+#         assert isinstance(lt, table.LogTable)
+
+
+def test_iterparse():
+    xlog_file = os.path.join('.', 'tests', 'testdata', 'BPIC2012.xes')
+
+    def time_iterparse(context):
+        start = time.time()
+        for event, child in context:
+            child.clear()
+        end = time.time()
+        diff = end - start
+        print('Took {} seconds'.format(diff))
+
+    with open(xlog_file, 'rb') as f:
+        context = etree.iterparse(f, events=('end',))
+        time_iterparse(context)
+
+    with open(xlog_file, 'rb') as f:
+        context = etree.iterparse(f, events=('start', 'end'))
+        time_iterparse(context)
+
+    assert 0 == 1
+
