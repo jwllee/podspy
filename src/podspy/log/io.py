@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""This is the data in module.
+"""This is the io module.
 
 This module reads log files.
 """
