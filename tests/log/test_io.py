@@ -6,7 +6,7 @@ This module test io module
 """
 
 
-import pytest, time
+import pytest, time, os, sys
 from datetime import datetime, timedelta, timezone
 from urllib.request import urlparse
 import numpy as np
@@ -269,3 +269,11 @@ def test_time_parse_log_xml(xlog_xml):
 #     print('Parsing BPIC2012 took {} seconds'.format(diff))
 #
 #     assert isinstance(lt, tble.LogTable)
+
+
+def test_time_parse_BPIC2018():
+    log_file = os.path.join('.', 'tests', 'testdata', 'BPIC2018.xes.gz')
+    lt = io.import_xlog_from_file(log_file)
+    print('Log table is {}b'.format(sys.getsizeof(lt)))
+
+    assert 1 == 0

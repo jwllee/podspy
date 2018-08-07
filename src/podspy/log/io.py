@@ -139,8 +139,8 @@ class LogTableTarget:
 
     def start(self, tag, attrib_dict):
         localname = self.__get_localname(tag).lower()
-        # logger.debug('start {} {}'.format(localname, attrib_dict))
-        if localname not in [LITERAL, TIMESTAMP, DISCRETE, CONTINUOUS, LIST, CONTAINER]:
+        logger.debug('start {} {}'.format(localname, attrib_dict))
+        if localname not in [LITERAL, TIMESTAMP, DISCRETE, BOOLEAN, CONTINUOUS, ID, LIST, CONTAINER]:
             if localname == EVENT:
                 self.__event = dict()
                 self.__attributable_stack.append(self.__event)
@@ -210,16 +210,18 @@ class LogTableTarget:
 
             elif localname == LIST:
                 logger.warning('Not supporting list attributes')
+                attrib = (None, None)
 
             elif localname == CONTINUOUS:
                 logger.warning('Not supporting container attributes')
+                attrib = (None, None)
 
             if attrib is not None:
                 self.__attribute_stack.append(attrib)
 
     def end(self, tag):
         localname = self.__get_localname(tag).lower()
-        # logger.debug('end {}'.format(localname))
+        logger.debug('end {}'.format(localname))
 
         if localname == GLOBAL:
             self.__globals = None
@@ -243,6 +245,9 @@ class LogTableTarget:
 
         else:
             key, value = self.__attribute_stack.pop()
+
+            if key is None and value is None:
+                return
 
             if self.__globals is not None:
                 self.__globals[key] = value
