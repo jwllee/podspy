@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
-"""This is the log io module.
+"""This is the data in module.
 
-This module contains methods to do io operations for log data.
+This module reads log files.
 """
 
-
-from .table import LogTable
+import logging, uuid, time
 from lxml import etree
-import logging, uuid
-from urllib.parse import urlparse
-from podspy.util import conversion
-import pandas as pd
-import numpy as np
 from podspy.log import constant as const
+from podspy.log import table as tble
+from podspy.util import conversion as cvrn
+from urllib.request import urlparse
+import pandas as pd
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -24,517 +22,258 @@ logger = logging.getLogger(__file__)
 
 
 # tags
-TAG_LOG = 'log'
-TAG_TRACE = 'trace'
-TAG_EVENT = 'event'
-TAG_EXTENSION = 'extension'
-TAG_CLASSIFIER = 'classifier'
-TAG_GLOBAL = 'global'
+LOG = 'log'
+TRACE = 'trace'
+EVENT = 'event'
+EXTENSION = 'extension'
+CLASSIFIER = 'classifier'
+GLOBAL = 'global'
 
-TAG_FLOAT = 'float'
-TAG_BOOL = 'boolean'
-TAG_DISC = 'int'
-TAG_ID = 'id'
-TAG_LITERAL = 'string'
-TAG_TIMESTAMP = 'date'
-TAG_CONTAINER = 'container'
-
-
-def import_logtable_from_xesfile(f):
-    """Import a log table from a xes file
-
-    :param f: file object
-    :return: a log table
-    """
-    context = etree.iterparse(f, events=('end',))
-
-    lt = None
-    for event, elem in context:
-        if elem.tag == TAG_LOG:
-            lt = parse_log_elem(elem)
-        else:
-            logger.warning('Element with tag: {} is not processed'.format(elem.tag))
-    return lt
+CONTINUOUS = 'float'
+BOOLEAN = 'boolean'
+DISCRETE = 'int'
+ID = 'id'
+LITERAL = 'string'
+TIMESTAMP = 'date'
+CONTAINER = 'container'
+LIST = 'list'
 
 
-def __is_attrib_tag(tag):
-    attrib_tags = [
-        TAG_FLOAT, TAG_BOOL, TAG_DISC, TAG_ID, TAG_LITERAL, TAG_TIMESTAMP, TAG_CONTAINER
-    ]
-    return tag in attrib_tags
+def import_xlog_from_file(fp):
+    start = time.time()
+    parser = etree.XMLParser(target=LogTableTarget())
+    lt = etree.parse(fp, parser)
+    diff = time.time() - start
 
-
-def parse_log_elem(context):
-    # use df.append(ss, ignore_index=True) to append series rows to dataframe
-
-    # logger.debug('Element: {}'.format(context))
-
-    # logger.debug('XES attributes: {}'.format(xes_attribs))
-
-    extensions = dict()
-    classifiers = dict()
-    global_trace_attribs = None
-    global_event_attribs = None
-    log_attribs = dict()
-    xes_attribs = dict()
-
-    trace_df = pd.DataFrame()
-    event_df = pd.DataFrame()
-
-    _map = {
-        'string': parse_literal_attrib_elem,
-        'boolean': parse_bool_attrib_elem,
-        'int': parse_discrete_attrib_elem,
-        'float': parse_continuous_attrib_elem,
-        'date': parse_timestamp_attrib_elem,
-        'id': parse_id_attrib_elem
-    }
-
-    root = None
-    trace_df_dict = dict()
-    ind = 0
-    event_df_list = list()
-
-    for event, child in context:
-        logger.debug('Event: {} Child: {}'.format(event, child))
-        # logger.debug('Processing element with tag: {}'.format(child.tag))
-        qname = etree.QName(child.tag)
-        tag = qname.localname
-
-        if tag == TAG_TRACE:
-            logger.debug('Parsing {} element'.format(tag))
-            trace_ss, trace_event_df = parse_trace_elem(child)
-            # trace_df = trace_df.append(trace_ss, ignore_index=True)
-            trace_ss_dict = trace_ss.to_dict()
-            trace_df_dict[ind] = trace_ss_dict
-            ind += 1
-            # event_df = pd.concat([event_df, trace_event_df], axis='index')
-            event_df_list.append(trace_event_df)
-            child.clear()
-
-        elif tag == TAG_EXTENSION:
-            logger.debug('Parsing {} element'.format(tag))
-            extensions = parse_extension_elem(child, extensions)
-            child.clear()
-
-        elif tag == TAG_CLASSIFIER and event == 'end':
-            logger.debug('Parsing {} element'.format(tag))
-            classifiers = parse_classifier_elem(child, classifiers)
-            child.clear()
-
-        elif tag == TAG_GLOBAL and event == 'end':
-            logger.debug('Parsing {} element'.format(tag))
-            scope, attribs = parse_global_attrib_elem(child)
-            if scope == TAG_TRACE:
-                global_trace_attribs = attribs
-                logger.debug('Global trace attribs: {}'.format(global_trace_attribs))
-            elif scope == TAG_EVENT:
-                global_event_attribs = attribs
-                logger.debug('Global event attribs: {}'.format(global_event_attribs))
-            child.clear()
-
-        elif tag == TAG_LOG:
-            root = child
-
-    event_df = pd.concat(event_df_list, axis='index')
-
-    # process log attributes
-    xes_attribs = dict(root.attrib)
-
-    for child in root:
-        qname = etree.QName(child.tag)
-        tag = qname.localname
-        logger.debug('Parsing element with tag: {}'.format(tag))
-        if __is_attrib_tag(tag):
-            key, val = _map[tag](child)
-            log_attribs[key] = val
-
-    logger.debug('Log attribs: {}'.format(log_attribs))
-    logger.debug('Event df: \n{}'.format(event_df))
-
-    trace_df = pd.DataFrame.from_dict(trace_df_dict, 'index')
-
-    lt = LogTable(trace_df=trace_df, event_df=event_df, attributes=log_attribs,
-                  global_trace_attributes=global_trace_attribs,
-                  global_event_attributes=global_event_attribs,
-                  classifiers=classifiers, extensions=extensions)
-    lt.xes_attributes = xes_attribs
+    logger.info('Parsing log to log table took {} seconds'.format(diff))
 
     return lt
 
 
-def parse_classifier_elem(elem, d=None):
-    """Parse a XES classifier element as a dict
+class LogTableTarget:
+    """Parser target class to pass to the :class:`lxml.etree.XMLParser` to build a
+    :class:`podspy.log.table.LogTable`.
 
-    :param elem: classifier element to parse
-    :param d: dictionary to store the parsed classifier
-    :return: the dictionary
     """
-    d = d if d is not None else dict()
+    def __init__(self):
+        self.__trace = None
+        self.__event = None
+        self.__attribute_stack = list()   # stack
+        self.__attributable_stack = list()    # stack
+        self.__extension = set()
+        self.__globals = None
 
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'classifier', 'Element has tag: {}'.format(tag)
-    assert 'name' in elem.attrib, 'Classifier element has no name'
-    assert 'keys' in elem.attrib, 'Classifier element has no keys'
+        self.__global_trace_attribs = dict()
+        self.__global_event_attribs = dict()
+        self.__extensions = dict()
+        self.__classifiers = dict()
+        self.__log_attribs = dict()
+        self.__xes_attribs = dict()
+        self.__trace_df_dict = dict()
+        self.__event_df_dict = dict()
+        self.__caseid = None
+        self.__trace_ind = 0
+        self.__event_ind = 0
 
-    name = elem.attrib['name']
-    keys = elem.attrib['keys']
+    @staticmethod
+    def __get_localname(tag):
+        qname = etree.QName(tag)
+        return qname.localname
 
-    def get_keylist(key_str, keys):
-        """Problem: key_str contains keys separated by space, but we don't know which
-        space is a separator between two keys and which are simply spaces of a single
-        key.
+    def parse_extension_elem(self, attrib):
+        name = attrib['name']
+        prefix = attrib['prefix']
+        uri = urlparse(attrib['uri'])
 
-        Solution: given a set of known keys, replace parts of the key_str with '' if
-        it correspond to a known key. The rest should be a new key.
+        self.__extensions[name] = (name, prefix, uri)
 
-        :param key_str: string containing keys
-        :param keys: known keys
-        :return: list of keys
-        """
-        if ' ' not in key_str:
-            return [key_str]
+    def parse_classifier_elem(self, attrib):
+        name = attrib['name']
+        keys = attrib['keys']
 
-        # add a space padding to the front and back of the key_str to facilitate replace in forloop
-        key_str = ' {} '.format(key_str)
-        key_str_1 = str(key_str)
-        keylist = []
+        def get_keylist(key_str, keys):
+            """Problem: key_str contains keys separated by space, but we don't know which
+            space is a separator between two keys and which are simply spaces of a single
+            key.
 
-        for key in keys:
-            if ' {} '.format(key) in key_str_1:
-                # find out the location of the key in the string so we can order the keys later on
-                start_ind = key_str.find(' {} '.format(key))
-                keylist.append((key, start_ind))
-                key_str_1 = key_str_1.replace(key, '')
+            Solution: given a set of known keys, replace parts of the key_str with '' if
+            it correspond to a known key. The rest should be a new key.
 
-        # add the remaining key_str as a new key
-        key_str_1 = key_str_1.strip()
+            :param key_str: string containing keys
+            :param keys: known keys
+            :return: list of keys
+            """
+            if ' ' not in key_str:
+                return [key_str]
 
-        if key_str_1 != '':
-            start_ind = key_str.find(key_str_1)
-            keylist.append((key_str_1, start_ind))
+            # add a space padding to the front and back of the key_str to facilitate replace in forloop
+            key_str = ' {} '.format(key_str)
+            key_str_1 = str(key_str)
+            keylist = []
 
-        # sort the keys
-        keylist = sorted(keylist, key=lambda item: item[1])
-        keylist, _ = zip(*keylist)
+            for key in keys:
+                if ' {} '.format(key) in key_str_1:
+                    # find out the location of the key in the string so we can order the keys later on
+                    start_ind = key_str.find(' {} '.format(key))
+                    keylist.append((key, start_ind))
+                    key_str_1 = key_str_1.replace(key, '')
 
-        return list(keylist)
+            # add the remaining key_str as a new key
+            key_str_1 = key_str_1.strip()
 
-    known_keys = set()
-    for v in d.values():
-        known_keys.update(set(v))
+            if key_str_1 != '':
+                start_ind = key_str.find(key_str_1)
+                keylist.append((key_str_1, start_ind))
 
-    logger.debug('Known classifier keys: {}'.format(known_keys))
+            # sort the keys
+            keylist = sorted(keylist, key=lambda item: item[1])
+            keylist, _ = zip(*keylist)
 
-    keylist = get_keylist(keys, known_keys)
-    d[name] = keylist
+            return list(keylist)
 
-    return d
+        known_keys = set(self.__global_event_attribs.keys())
+        # logger.debug('Known classifier keys: {}'.format(known_keys))
 
+        keylist = get_keylist(keys, known_keys)
+        self.__classifiers[name] = keylist
 
-def parse_extension_elem(elem, d=None):
-    """Parses an element containing information of an XExtension
+    def start(self, tag, attrib_dict):
+        localname = self.__get_localname(tag).lower()
+        # logger.debug('start {} {}'.format(localname, attrib_dict))
+        if localname not in [LITERAL, TIMESTAMP, DISCRETE, CONTINUOUS, LIST, CONTAINER]:
+            if localname == EVENT:
+                self.__event = dict()
+                self.__attributable_stack.append(self.__event)
+            elif localname == TRACE:
+                self.__trace = dict()
+                self.__attributable_stack.append(self.__trace)
+            elif localname == LOG:
+                # make the xes attributes
+                self.__xes_attribs = dict(attrib_dict)
+                self.__attributable_stack.append(self.__log_attribs)
+            elif localname == EXTENSION:
+                self.parse_extension_elem(attrib_dict)
+            elif localname == GLOBAL:
+                scope = attrib_dict['scope']
 
-    :param elem: Element to parse
-    :param d: dictionary to put the parsed extension information
-    :return: modified dictionary
-    """
-    d = d if d is not None else dict()
+                if scope.lower() == TRACE:
+                    self.__globals = self.__global_trace_attribs
+                elif scope.lower() == EVENT:
+                    self.__globals = self.__global_event_attribs
 
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'extension', 'Element has tag: {}'.format(tag)
-    assert 'name' in elem.attrib, 'Extension element has no name'
-    assert 'prefix' in elem.attrib, 'Extension element has no prefix'
-    assert 'uri' in elem.attrib, 'Extension element has no uri'
-
-    name = elem.attrib['name']
-    prefix = elem.attrib['prefix']
-    uri = urlparse(elem.attrib['uri'])
-
-    d[name] = (name, prefix, uri)
-    return d
-
-
-def parse_global_attrib_elem(elem):
-    """Parse an element containing global attributes, can be either related to trace or event
-
-    :param elem: element to parse
-    :return: dictionary mapping attribute key to attribute value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'global', 'Element has tag: {}'.format(tag)
-    assert 'scope' in elem.attrib, 'Global attribute has no scope'
-
-    scope = elem.attrib['scope']
-    attribs = dict()
-
-    _map = {
-        'string': parse_literal_attrib_elem,
-        'boolean': parse_bool_attrib_elem,
-        'int': parse_discrete_attrib_elem,
-        'float': parse_continuous_attrib_elem,
-        'date': parse_timestamp_attrib_elem,
-        'id': parse_id_attrib_elem
-    }
-
-    for child in elem:
-        qname = etree.QName(child.tag)
-        tag = qname.localname
-        if tag in _map:
-            key, value = _map[tag](child)
-            attribs[key] = value
+            elif localname == CLASSIFIER:
+                self.parse_classifier_elem(attrib_dict)
         else:
-            logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
+            # it's an attribute
+            key = attrib_dict.get('key', 'UNKNOWN')
+            value = attrib_dict.get('value', '')
 
-    return scope, attribs
+            attrib = None
 
+            if localname == LITERAL:
+                attrib = (key, value)
+                if self.__trace is not None and key == 'concept:name' and self.__event is None:
+                    # record caseid
+                    self.__caseid = value
 
-def parse_literal_attrib_elem(elem):
-    """Parse an element of a XAttributeLiteral
+            elif localname == TIMESTAMP:
+                time = cvrn.parse_timestamp(value)
+                attrib = (key, time)
 
-    :param elem: element to parse
-    :return: the key and literal value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'string', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'Literal attribute has no key'
-    assert 'value' in elem.attrib, 'Literal attribute has no value'
+            elif localname == DISCRETE:
+                try:
+                    int_value = int(value)
+                except ValueError as e:
+                    logger.error('Cannot convert {} as int: {}'.format(value, e))
+                    int_value = 0
+                attrib = (key, int_value)
 
-    key = elem.attrib['key']
-    value = elem.attrib['value']
+            elif localname == CONTINUOUS:
+                try:
+                    float_value = float(value)
+                except ValueError as e:
+                    logger.error('Cannot convert {} as float: {}'.format(value, e))
+                    float_value = 0.
+                attrib = (key, float_value)
 
-    if len(elem):
-        parse_list_attrib_elem(elem)
+            elif localname == BOOLEAN:
+                bool_value = True if value.lower() == 'true' else False
+                attrib = (key, bool_value)
 
-    return key, value
+            elif localname == ID:
+                try:
+                    id_value = uuid.UUID(value)
+                except ValueError as e:
+                    logger.error('Cannot convert {} as id: {}'.format(value, e))
+                    id_value = value
+                attrib = (key, id_value)
 
+            elif localname == LIST:
+                logger.warning('Not supporting list attributes')
 
-def parse_bool_attrib_elem(elem):
-    """Parse an element of a XAttributeBoolean
+            elif localname == CONTINUOUS:
+                logger.warning('Not supporting container attributes')
 
-    :param elem: element to parse
-    :return: the key and boolean value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'boolean', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'Boolean attribute has no key'
-    assert 'value' in elem.attrib, 'Boolean attribute has no value'
+            if attrib is not None:
+                self.__attribute_stack.append(attrib)
 
-    key = elem.attrib['key']
-    value = elem.attrib['value'].lower()
+    def end(self, tag):
+        localname = self.__get_localname(tag).lower()
+        # logger.debug('end {}'.format(localname))
 
-    if value == 'true':
-        bool_val = True
-    elif value == 'false':
-        bool_val = False
-    else:
-        logger.warning('Do not recognize boolean value: {}, use default value: {}'.format(value, False))
-        bool_val = False
+        if localname == GLOBAL:
+            self.__globals = None
 
-    if len(elem):
-        parse_list_attrib_elem(elem)
+        elif localname not in [LITERAL, TIMESTAMP, DISCRETE, CONTINUOUS, BOOLEAN, ID, LIST, CONTAINER]:
+            if localname == EVENT:
+                self.__event[const.CASEID] = self.__caseid
+                self.__event_df_dict[self.__event_ind] = self.__event
+                self.__event_ind += 1
+                self.__event = None
+                self.__attributable_stack.pop()
 
-    return key, bool_val
+            elif localname == TRACE:
+                self.__trace_df_dict[self.__trace_ind] = self.__trace
+                self.__trace_ind += 1
+                self.__trace = None
+                self.__attributable_stack.pop()
 
+            elif localname == LOG:
+                self.__attributable_stack.pop()
 
-def parse_discrete_attrib_elem(elem):
-    """Parse an element of a XAttributeDiscrete
-
-    :param elem: element to parse
-    :return: a tuple containing the key and discrete value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'int', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'Discrete attribute has no key'
-    assert 'value' in elem.attrib, 'Discrete attribute has no value'
-
-    key = elem.attrib['key']
-    value = elem.attrib['value']
-
-    try:
-        int_value = int(value)
-    except ValueError as e:
-        logger.error('Cannot convert {} as int: {}'.format(value, e))
-        int_value = 0
-
-    if len(elem):
-        parse_list_attrib_elem(elem)
-
-    return key, int_value
-
-
-def parse_continuous_attrib_elem(elem):
-    """Parse an element of a XAttributeContinuous
-
-    :param elem: element to parse
-    :return: a tuple containing the key and continuous value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'float', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'Continuous attribute has no key'
-    assert 'value' in elem.attrib, 'Continuous attribute has no value'
-
-    key = elem.attrib['key']
-    value = elem.attrib['value']
-
-    try:
-        float_value = float(value)
-    except ValueError as e:
-        logger.error('Cannot convert {} as float: {}'.format(value, e))
-        float_value = 0.
-
-    if len(elem):
-        parse_list_attrib_elem(elem)
-
-    return key, float_value
-
-
-def parse_timestamp_attrib_elem(elem):
-    """Parse an element of a XAttributeTimestamp
-
-    :param elem: element to parse
-    :return: a tuple containing the key and datetime value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'date', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'Timestamp attribute has no key'
-    assert 'value' in elem.attrib, 'Timestamp attribute has no value'
-
-    key = elem.attrib['key']
-    value = elem.attrib['value']
-    time = conversion.parse_timestamp(value)
-
-    if len(elem):
-        parse_list_attrib_elem(elem)
-
-    return key, time
-
-
-def parse_id_attrib_elem(elem):
-    """Parse an element of a XAttributeID
-
-    :param elem: element to parse
-    :return: a tuple containing the key and id value
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'id', 'Element has tag: {}'.format(tag)
-    assert 'key' in elem.attrib, 'ID attribute has no key'
-    assert 'value' in elem.attrib, 'ID attribute has no value'
-
-    key = elem.attrib['key']
-    value = elem.attrib['value']
-
-    try:
-        id_value = uuid.UUID(value)
-    except ValueError as e:
-        logger.error('Cannot convert {} as uuid: {}'.format(value, e))
-        id_value = value
-
-    if len(elem):
-        parse_list_attrib_elem(elem)
-
-    return key, id_value
-
-
-def parse_list_attrib_elem(elem):
-    logger.warning('List XAttribute is not supported')
-
-
-def parse_container_attrib_elem(elem):
-    logger.warning('Container XAttribute is not supported')
-
-
-def parse_event_elem(elem):
-    """Parses an element contianing a :class:`opyenxes.model.XEvent.XEvent`.
-
-    :param elem: element to parse
-    :return: a series containing event info
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'event', 'Element has tag: {}'.format(tag)
-
-    attribs = dict()
-
-    _map = {
-        'string': parse_literal_attrib_elem,
-        'boolean': parse_bool_attrib_elem,
-        'int': parse_discrete_attrib_elem,
-        'float': parse_continuous_attrib_elem,
-        'date': parse_timestamp_attrib_elem,
-        'id': parse_id_attrib_elem
-    }
-
-    for child in elem:
-        qname = etree.QName(child.tag)
-        tag = qname.localname
-        if tag in _map:
-            key, value = _map[tag](child)
-            attribs[key] = value
         else:
-            logger.warning('Skipping unsupported attribute type {}: \n{}'.format(child.tag, child))
+            key, value = self.__attribute_stack.pop()
 
-    ss = pd.Series(attribs)
-    return ss
+            if self.__globals is not None:
+                self.__globals[key] = value
 
+            else:
+                self.__attributable_stack[-1][key] = value
 
-def parse_trace_elem(elem):
-    """Parses an element containing a :class:`opyenxes.model.XTrace.XTrace`.
+    def data(self, data):
+        # logger.debug('data {}'.format(data))
+        pass
 
-    :param elem: element to parse
-    :return: a series row containing trace info, and a dataframe containing event info
-    """
-    qname = etree.QName(elem.tag)
-    tag = qname.localname
-    assert tag == 'trace', 'Element has tag: {}'.format(tag)
+    def comment(self, text):
+        # logger.debug('comment {}'.format(text))
+        pass
 
-    event_df = pd.DataFrame()
-    event_df_dict = dict()
-    attribs = dict()
+    def close(self):
+        # logger.debug('close')
 
-    _map = {
-        'string': parse_literal_attrib_elem,
-        'boolean': parse_bool_attrib_elem,
-        'int': parse_discrete_attrib_elem,
-        'float': parse_continuous_attrib_elem,
-        'date': parse_timestamp_attrib_elem,
-        'id': parse_id_attrib_elem
-    }
+        event_df = pd.DataFrame.from_dict(self.__event_df_dict, 'index')
+        trace_df = pd.DataFrame.from_dict(self.__trace_df_dict, 'index')
 
-    ind = 0
+        lt = tble.LogTable(
+            trace_df=trace_df,
+            event_df=event_df,
+            attributes=self.__log_attribs,
+            global_trace_attributes=self.__global_trace_attribs,
+            global_event_attributes=self.__global_event_attribs,
+            classifiers=self.__classifiers,
+            extensions=self.__extensions
+        )
 
-    for child in elem:
-        qname = etree.QName(child.tag)
-        tag = qname.localname
-        if tag in _map:
-            key, value = _map[tag](child)
-            attribs[key] = value
-        elif tag == 'event':
-            event_ss = parse_event_elem(child)
-            event_ss_dict = event_ss.to_dict()
-            # logger.debug('Event series dict: {}'.format(event_ss_dict))
-            event_df_dict[ind] = event_ss_dict
-            # event_df = event_df.append(event_ss, ignore_index=True)
-            ind += 1
-        else:
-            logger.warning('Skipping unsupported child type {}: \n{}'.format(child.tag, child))
+        lt.xes_attributes = self.__xes_attribs
 
-    ss = pd.Series(attribs)
-    event_df = pd.DataFrame.from_dict(event_df_dict, 'index')
-
-    # add caseid to event_df
-    assert 'concept:name' in attribs, 'concept:name (caseid) is missing'
-    event_df[const.CASEID] = attribs['concept:name']
-
-    print('Parsed trace with caseid: {}'.format(attribs['concept:name']))
-
-    return ss, event_df
+        return lt
