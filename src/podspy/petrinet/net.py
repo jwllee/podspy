@@ -9,6 +9,7 @@ from abc import abstractmethod
 from podspy.graph import directed
 from podspy.petrinet.element import *
 from podspy.petrinet.semantics import Marking
+from podspy.petrinet import factory as fty
 import pandas as pd
 import numpy as np
 import logging
@@ -336,6 +337,18 @@ class AcceptingPetrinet:
             final_markings.add(Marking())
 
         return init_marking, final_markings
+
+    def __iter__(self):
+        """Override __iter__ to make AcceptingPetrinet easier to work with
+
+        >>> pn = fty.PetrinetFactory('net_0')
+        >>> init_marking, final_markings = Marking(), Marking()
+        >>> apn = AcceptingPetrinet(pn, init_marking, final_markings)
+        >>> pn, init_marking, final_markings = apn
+
+        :return: iterable
+        """
+        return iter([self.net, self.init_marking, self.final_markings])
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,

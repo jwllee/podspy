@@ -27,6 +27,11 @@ def net_fp():
     return os.path.join('.', 'tests', 'testdata', 'net1.pnml')
 
 
+@pytest.fixture
+def apna_fp():
+    return os.path.join('.', 'tests', 'testdata', 'simple-apna', 'simple.apna')
+
+
 def test_import_pnml():
     net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
     with open(net_fp, 'r') as f:
@@ -142,3 +147,18 @@ def test_export_petrinet_with_layout(net_fp):
     #     io.export_pnml_to_file(apnet, f, layout=G)
 
     assert expected == out_f.getvalue()
+
+
+def test_import_apna(apna_fp):
+    with open(apna_fp, 'r') as f:
+        apna = io.import_apna_from_file(f)
+
+    assert len(apna) == 2
+
+    apnet_0, apnet_1 = apna
+
+    assert isinstance(apnet_0, AcceptingPetrinet)
+    assert isinstance(apnet_1, AcceptingPetrinet)
+
+    # apnet_0
+    pnet_0, init_marking_0, final_markings_0 = apnet_0

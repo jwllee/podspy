@@ -66,6 +66,10 @@ def import_pnml_from_file(file):
     return pnml
 
 
+def import_apna_from_file(file):
+    pass
+
+
 def pnml2ptnet(pnml):
     pnml_net = pnml.net_list[0]
     net_label = pnml_net.name.text.text if pnml_net.name else 'net0'

@@ -7,6 +7,7 @@ This module tests petri net classes.
 
 
 from podspy.petrinet.factory import *
+from podspy.petrinet import semantics as smc
 
 import pandas as pd
 import numpy as np
@@ -75,3 +76,10 @@ class TestPetrinet:
 
         assert_frame_equal(p_to_t_df, expected_p_to_t_df)
         assert_frame_equal(t_to_p_df, expected_t_to_p_df)
+
+
+class TestAcceptingPetrinet:
+    def test_iterable(self):
+        pn = PetrinetFactory.new_petrinet('net_0')
+        init_marking, final_markings = smc.Marking(), smc.Marking()
+        apn =
