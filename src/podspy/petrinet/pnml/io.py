@@ -73,7 +73,12 @@ def import_apnml(file):
 
 
 def import_apna_from_file(file):
-    pass
+    apna = []
+    for pn_fp in file:
+        with open(pn_fp.strip(), 'r') as f:
+            apn = import_apnml(f)
+            apna.append(apn)
+    return apna
 
 
 def pnml2ptnet(pnml):
