@@ -98,22 +98,22 @@ def pnml2pn(pnml):
     return net, marking, final_markings
 
 
-def pn2pnml(net, marking=None, final_markings=None, layout=None):
+def pn2pnml(net, marking=None, final_markings=None):
     marked_nets = {net: marking}
     final_marked_nets = {net: final_markings}
-    pnml, id_map = pnml_fty.PnmlElementFactory.net2pnml(marked_nets, final_marked_nets, layout)
+    pnml, id_map = pnml_fty.PnmlElementFactory.net2pnml(marked_nets, final_marked_nets)
     return pnml, id_map
 
 
-def apn2pnml(net, layout=None):
-    return pn2pnml(net.net, net.init_marking, net.final_markings, layout)
+def apn2pnml(net):
+    return pn2pnml(net.net, net.init_marking, net.final_markings)
 
 
-def export_net(net, file, marking=None, final_markings=None, layout=None):
+def export_net(net, file, marking=None, final_markings=None):
     if isinstance(net, nts.AbstractResetInhibitorNet):
-        pnml, id_map = pn2pnml(net, marking, final_markings, layout)
+        pnml, id_map = pn2pnml(net, marking, final_markings)
     elif isinstance(net, nts.AcceptingPetrinet):
-        pnml, id_map = apn2pnml(net, layout)
+        pnml, id_map = apn2pnml(net)
     else:
         raise ValueError('Do not recognize net class: {}'.format(net.__class__))
 
