@@ -11,6 +11,7 @@ import logging
 import itertools as its
 from podspy.petrinet import nets as nts
 from podspy.petrinet import semantics as smc
+from collections import namedtuple
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -34,20 +35,24 @@ def export_graphviz(net, out_file='net.dot', marking=None, layout='dot'):
     return G
 
 
-def add_trans_to_dotgraph(t, G):
+def add_trans_to_dotgraph(t, G, id_func=None):
     """Add :class:`Transition` to graphviz :class:`AGraph`
 
     :param t: transition to add
     :param G: graph where transition is to be added
     :return: graph node
     """
+    default_id_func = lambda t: str(t._id)
+    id_func = default_id_func if id_func is None else id_func
+
     attrs = {
         'label': t.label,
         'shape': 'square',
     }
 
-    G.add_node(t, **attrs)
-    n = G.get_node(t)
+    node_id = id_func(t)
+    G.add_node(node_id, **attrs)
+    n = G.get_node(node_id)
 
     if t.is_invisible:
         n.attr['color'] = 'black'
@@ -56,7 +61,7 @@ def add_trans_to_dotgraph(t, G):
     return n
 
 
-def add_place_to_dotgraph(p, G, token=0):
+def add_place_to_dotgraph(p, G, token=0, id_func=None):
     """Add :class:`Place` to graphviz :class:`AGraph`
 
     :param p: place to add
@@ -64,13 +69,17 @@ def add_place_to_dotgraph(p, G, token=0):
     :param token: number of tokens in place
     :return: graph node
     """
+    default_id_func = lambda p: str(p._id)
+    id_func = default_id_func if id_func is None else id_func
+
     attrs = {
         'shape': 'circle',
         'label': ''
     }
 
-    G.add_node(p, **attrs)
-    n = G.get_node(p)
+    node_id = id_func(p)
+    G.add_node(node_id, **attrs)
+    n = G.get_node(node_id)
 
     if token > 0:
         n.attr['label'] = token
@@ -78,7 +87,7 @@ def add_place_to_dotgraph(p, G, token=0):
     return n
 
 
-def add_arc_to_dotgraph(a, G):
+def add_arc_to_dotgraph(src, target, weight, edge_id, G):
     """Add :class:`Arc` to graphviz :class:`AGraph`
 
     :param a: arc to add
@@ -91,17 +100,18 @@ def add_arc_to_dotgraph(a, G):
         'arrowType': 'normal',
         'dir': 'forward'
     }
-    G.add_edge(a.src, a.target, key=a, **attrs)
-    e = G.get_edge(a.src, a.target, key=a)
+    # edge_id = id_func(a)
+    G.add_edge(src, target, key=edge_id, **attrs)
+    e = G.get_edge(src, target, key=edge_id)
 
     # only add edge weight as label if the weight is larger than 1
-    if a.weight > 1:
-        e.attr['label'] = a.weight
+    if weight > 1:
+        e.attr['label'] = weight
 
     return e
 
 
-def add_inhibitor_arc_to_dotgraph(a, G):
+def add_inhibitor_arc_to_dotgraph(src, target, edge_id, G):
     """Add :class:`InhibitorArc` to graphviz :class:`AGraph`
 
     :param a: inhibitor arc to add
@@ -113,13 +123,13 @@ def add_inhibitor_arc_to_dotgraph(a, G):
         'arrowType': 'odot',
         'dir': 'forward'
     }
-    G.add_edge(a.src, a.target, key=a, **attrs)
-    e = G.get_edge(a.src, a.target, key=a)
+    G.add_edge(src, target, key=edge_id, **attrs)
+    e = G.get_edge(src, target, key=edge_id)
 
     return e
 
 
-def add_reset_arc_to_dotgraph(a, G):
+def add_reset_arc_to_dotgraph(src, target, edge_id, G):
     """Add :class:`ResetArc` to graphviz :class:`AGraph`
 
     :param a: reset arc to add
@@ -131,13 +141,13 @@ def add_reset_arc_to_dotgraph(a, G):
         'arrowType': 'vee',
         'dir': 'forward'
     }
-    G.add_edge(a.src, a.target, key=a, **attrs)
-    e = G.get_edge(a.src, a.target, key=a)
+    G.add_edge(src, target, key=edge_id, **attrs)
+    e = G.get_edge(src, target, key=edge_id)
 
     return e
 
 
-def net2dot(net, marking=None, layout='dot', rankdir='LR'):
+def net2dot(net, marking=None, layout='dot', rankdir='LR', node_id_func=None, edge_id_func=None):
     """Convert petri net to graphviz :class:`AGraph`. Petri net should be subclass of
     :class:`AbstractResetInhibitorNet`
 
@@ -150,9 +160,15 @@ def net2dot(net, marking=None, layout='dot', rankdir='LR'):
     # possible rankdir: TB, LR, BT, RL
     G = pgv.AGraph(rankdir=rankdir)
 
+    default_node_id_func = lambda n: str(n._id)
+    default_edge_id_func = lambda e: '{}->{}'.format(str(e.src._id), str(e.target._id))
+
+    node_id_func = default_node_id_func if node_id_func is None else node_id_func
+    edge_id_func = default_edge_id_func if edge_id_func is None else edge_id_func
+
     # add transitions
     for t in net.transitions:
-        add_trans_to_dotgraph(t, G)
+        add_trans_to_dotgraph(t, G, node_id_func)
 
     # add places
     for p in net.places:
@@ -160,24 +176,31 @@ def net2dot(net, marking=None, layout='dot', rankdir='LR'):
         if marking:
             token = marking.occurrences(p)
 
-        add_place_to_dotgraph(p, G, token)
+        add_place_to_dotgraph(p, G, token, node_id_func)
 
     # add edges
     for a in net.arcs:
         # logger.debug('Adding {!s}'.format(a))
-        add_arc_to_dotgraph(a, G)
+        src, target, weight = node_id_func(a.src), node_id_func(a.target), a.weight
+        edge_id = edge_id_func(a)
+        add_arc_to_dotgraph(src, target, weight, edge_id, G)
 
     for a in net.reset_arcs:
-        add_reset_arc_to_dotgraph(a, G)
+        src, target = node_id_func(a.src), node_id_func(a.target)
+        edge_id = edge_id_func(a)
+        add_reset_arc_to_dotgraph(src, target, edge_id, G)
 
     for a in net.inhibitor_arcs:
-        add_inhibitor_arc_to_dotgraph(a, G)
+        src, target = node_id_func(a.src), node_id_func(a.target)
+        edge_id = edge_id_func(a)
+        add_inhibitor_arc_to_dotgraph(src, target, edge_id, G)
 
     G.layout(prog=layout)
     return G
 
 
-def netarray2dot(nets, layout='dot', rankdir='LR', node_constraints=list(), constraint_style='invis'):
+def netarray2dot(nets, layout='dot', rankdir='LR', node_id_func=None, edge_id_func=None,
+                 node_constraints=list(), constraint_style='invis'):
     """
 
     :param nets:
@@ -188,6 +211,12 @@ def netarray2dot(nets, layout='dot', rankdir='LR', node_constraints=list(), cons
     """
     G = pgv.AGraph(rankdir=rankdir)
 
+    default_node_id_func = lambda n: str(n._id)
+    default_edge_id_func = lambda e: '{}->{}'.format(str(e.src._id), str(e.target._id))
+
+    node_id_func = default_node_id_func if node_id_func is None else node_id_func
+    edge_id_func = default_edge_id_func if edge_id_func is None else edge_id_func
+
     for net in nets:
         init, finals = smc.Marking(), set()
 
@@ -195,31 +224,42 @@ def netarray2dot(nets, layout='dot', rankdir='LR', node_constraints=list(), cons
             net, init, finals = net
 
         for t in net.transitions:
-            add_trans_to_dotgraph(t, G)
+            add_trans_to_dotgraph(t, G, node_id_func)
 
         for p in net.places:
             token = init.occurrences(p)
-            add_place_to_dotgraph(p, G, token)
+            add_place_to_dotgraph(p, G, token, node_id_func)
 
         for a in net.arcs:
-            add_arc_to_dotgraph(a, G)
+            src, target, weight = str(a.src._id), str(a.target._id), a.weight
+            edge_id = edge_id_func(a)
+            add_arc_to_dotgraph(src, target, weight, edge_id, G)
 
         for a in net.reset_arcs:
-            add_reset_arc_to_dotgraph(a, G)
+            src, target = node_id_func(a.src), node_id_func(a.target)
+            edge_id = edge_id_func(a)
+            add_reset_arc_to_dotgraph(src, target, edge_id, G)
 
         for a in net.inhibitor_arcs:
-            add_inhibitor_arc_to_dotgraph(a, G)
+            src, target = node_id_func(a.src), node_id_func(a.target)
+            edge_id = edge_id_func(a)
+            add_inhibitor_arc_to_dotgraph(src, target, edge_id, G)
+
+    ArcTuple = namedtuple('ArcTuple', ['src', 'target'])
 
     for group in node_constraints:
         # add edges between transitions with the same label
         for node_pair in its.combinations(group, 2):
             n0, n1 = node_pair
+            arc_tuple = ArcTuple(n0, n1)
             attrs = {
                 'style': constraint_style,
                 'len': 10,
             }
-            arc_name = '{}-{}'.format(n0.label, n1.label)
-            G.add_edge(n0, n1, key=arc_name, **attrs)
+            edge_id = edge_id_func(arc_tuple)
+            n0_id = node_id_func(n0)
+            n1_id = node_id_func(n1)
+            G.add_edge(n0_id, n1_id, key=edge_id, **attrs)
 
     G.layout(prog=layout)
     return G
