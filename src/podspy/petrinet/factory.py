@@ -55,8 +55,7 @@ class PetrinetFactory:
         return init_marking, final_markings
 
     @classmethod
-    def new_accepting_petrinet(cls, label, init_marking=None, final_markings=None):
-        pn = PetrinetFactory.new_petrinet(label)
+    def new_accepting_petrinet(cls, net, init_marking=None, final_markings=None):
         if init_marking is None or len(final_markings) == 0:
             init, final = PetrinetFactory.derive_marking(pn)
 
@@ -66,7 +65,7 @@ class PetrinetFactory:
             if final_markings is None:
                 final_markings = final
 
-        apn = nt.AcceptingPetrinet(pn, init_marking, final_markings)
+        apn = nt.AcceptingPetrinet(net, init_marking, final_markings)
 
         return apn
 
