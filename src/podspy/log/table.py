@@ -7,7 +7,9 @@ This module does stuff.
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
-__all__ = ['LogTable', 'XLogToLogTable']
+__all__ = [
+    'LogTable'
+]
 
 
 import warnings, logging
