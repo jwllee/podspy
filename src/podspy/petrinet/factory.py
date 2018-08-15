@@ -5,7 +5,7 @@
 This module contains Petri net factory to make petri nets.
 """
 
-from podspy.petrinet.net import *
+from podspy.petrinet import net as nt
 from podspy.petrinet import semantics as smc
 
 
@@ -19,19 +19,19 @@ __all__ = [
 class PetrinetFactory:
     @classmethod
     def new_petrinet(cls, label):
-        return Petrinet(label)
+        return nt.Petrinet(label)
 
     @classmethod
     def new_reset_net(cls, label):
-        return ResetNet(label)
+        return nt.ResetNet(label)
 
     @classmethod
     def new_reset_inhibitor_net(cls, label):
-        return ResetInhibitorNet(label)
+        return nt.ResetInhibitorNet(label)
 
     @classmethod
     def new_inhibitor_net(cls, label):
-        return InhibitorNet(label)
+        return nt.InhibitorNet(label)
 
     @staticmethod
     def derive_marking(pn):
@@ -66,7 +66,7 @@ class PetrinetFactory:
             if final_markings is None:
                 final_markings = final
 
-        apn = AcceptingPetrinet(pn, init_marking, final_markings)
+        apn = nt.AcceptingPetrinet(pn, init_marking, final_markings)
 
         return apn
 
