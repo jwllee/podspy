@@ -21,8 +21,8 @@ __email__ = "walee@uc.cl"
 def test_ptnet2dot():
     net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
-    ptnet, marking, final_markings = io.pnml2ptnet(pnml)
+        pnml = io.import_pnml(f)
+    ptnet, marking, final_markings = io.pnml2pn(pnml)
 
     G = vis.net2dot(ptnet, marking, layout='dot')
 

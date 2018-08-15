@@ -54,7 +54,7 @@ def make_from_element(element, parent_cls):
     return pnml
 
 
-def import_pnml_from_file(file):
+def import_pnml(file):
     tree = etree.parse(file)
     root = tree.getroot()
 
@@ -67,12 +67,12 @@ def import_pnml_from_file(file):
 
 
 def import_apnml(file):
-    pnml = import_pnml_from_file(file)
-    net, init, final = pnml2ptnet(pnml)
+    pnml = import_pnml(file)
+    net, init, final = pnml2pn(pnml)
     return PetrinetFactory.new_accepting_petrinet(net, init, final)
 
 
-def import_apna_from_file(file):
+def import_apna(file):
     apna = []
     for pn_fp in file:
         with open(pn_fp.strip(), 'r') as f:
@@ -81,7 +81,7 @@ def import_apna_from_file(file):
     return apna
 
 
-def pnml2ptnet(pnml):
+def pnml2pn(pnml):
     pnml_net = pnml.net_list[0]
     net_label = pnml_net.name.text.text if pnml_net.name else 'net0'
     net = PetrinetFactory.new_petrinet(net_label)
@@ -91,22 +91,22 @@ def pnml2ptnet(pnml):
     return net, marking, final_markings
 
 
-def ptnet2pnml(net, marking=None, final_markings=None, layout=None):
+def pn2pnml(net, marking=None, final_markings=None, layout=None):
     marked_nets = {net: marking}
     final_marked_nets = {net: final_markings}
     pnml, id_map = PnmlElementFactory.net2pnml(marked_nets, final_marked_nets, layout)
     return pnml, id_map
 
 
-def apnet2pnml(net, layout=None):
-    return ptnet2pnml(net.net, net.init_marking, net.final_markings, layout)
+def apn2pnml(net, layout=None):
+    return pn2pnml(net.net, net.init_marking, net.final_markings, layout)
 
 
 def export_net(net, file, marking=None, final_markings=None, layout=None):
     if isinstance(net, nt.AbstractResetInhibitorNet):
-        pnml, id_map = ptnet2pnml(net, marking, final_markings, layout)
+        pnml, id_map = pn2pnml(net, marking, final_markings, layout)
     elif isinstance(net, nt.AcceptingPetrinet):
-        pnml, id_map = apnet2pnml(net, layout)
+        pnml, id_map = apn2pnml(net, layout)
     else:
         raise ValueError('Do not recognize net class: {}'.format(net.__class__))
 

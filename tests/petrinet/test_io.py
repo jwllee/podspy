@@ -34,7 +34,7 @@ def apna_fname():
 def test_import_pnml():
     net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
     assert pnml is not None
     assert isinstance(pnml, Pnml)
@@ -43,9 +43,9 @@ def test_import_pnml():
 def test_import_petrinet():
     net_fp = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
-    net, marking, final_markings = io.pnml2ptnet(pnml)
+    net, marking, final_markings = io.pnml2pn(pnml)
 
     assert isinstance(net, Petrinet)
     assert isinstance(marking, Marking)
@@ -78,11 +78,11 @@ def test_import_petrinet():
 
 def test_ptnet2pnml_without_layout(net_fp):
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
-    apnet = AcceptingPetrinet(*io.pnml2ptnet(pnml))
+    apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
 
-    converted_pnml = io.apnet2pnml(apnet)
+    converted_pnml = io.apn2pnml(apnet)
 
     assert isinstance(converted_pnml, Pnml)
     assert pnml == converted_pnml
@@ -90,12 +90,12 @@ def test_ptnet2pnml_without_layout(net_fp):
 
 def test_ptnet2pnml_with_layout(net_fp):
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
-    apnet = AcceptingPetrinet(*io.pnml2ptnet(pnml))
+    apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
 
     G = vis.net2dot(apnet.net, apnet.init_marking, layout='dot')
-    converted_pnml = io.apnet2pnml(apnet, G)
+    converted_pnml = io.apn2pnml(apnet, G)
 
     assert isinstance(converted_pnml, Pnml)
     assert pnml == converted_pnml
@@ -103,9 +103,9 @@ def test_ptnet2pnml_with_layout(net_fp):
 
 def test_export_petrinet_without_layout(net_fp):
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
-    net, marking, final_markings = io.pnml2ptnet(pnml)
+    net, marking, final_markings = io.pnml2pn(pnml)
 
     assert isinstance(marking, Marking)
 
@@ -126,9 +126,9 @@ def test_export_petrinet_without_layout(net_fp):
 
 def test_export_petrinet_with_layout(net_fp):
     with open(net_fp, 'r') as f:
-        pnml = io.import_pnml_from_file(f)
+        pnml = io.import_pnml(f)
 
-    net, marking, final_markings = io.pnml2ptnet(pnml)
+    net, marking, final_markings = io.pnml2pn(pnml)
     G = vis.net2dot(net, marking, layout='dot')
 
     assert isinstance(marking, Marking)
@@ -153,7 +153,7 @@ def test_import_apna(apna_fname):
     dirpath = os.path.join('.', 'tests', 'testdata', 'simple-apna')
     os.chdir(dirpath)
     with open(apna_fname, 'r') as f:
-        apna = io.import_apna_from_file(f)
+        apna = io.import_apna(f)
 
     assert len(apna) == 2
 
