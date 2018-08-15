@@ -7,6 +7,7 @@ This module test classes in base module.
 
 
 from podspy.petrinet.pnml.base import *
+from podspy.petrinet.pnml import element as emt
 from podspy.util import attribute as attrib
 from collections import namedtuple
 
@@ -15,7 +16,7 @@ __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 
 
-class MockPnmlAnnotation(PnmlAnnotation):
+class MockPnmlAnnotation(emt.PnmlAnnotation):
     TAG = 'mock'
 
     def __init__(self, text=None):
