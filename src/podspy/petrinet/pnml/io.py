@@ -16,7 +16,7 @@ from podspy.petrinet.pnml.extension import *
 
 from podspy.petrinet.factory import *
 from podspy.petrinet.semantics import *
-from podspy.petrinet.net import AbstractResetInhibitorNet, AcceptingPetrinet
+from podspy.petrinet import net as nt
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -92,9 +92,9 @@ def apnet2pnml(net, layout=None):
 
 
 def export_net(net, file, marking=None, final_markings=None, layout=None):
-    if isinstance(net, AbstractResetInhibitorNet):
+    if isinstance(net, nt.AbstractResetInhibitorNet):
         pnml, id_map = ptnet2pnml(net, marking, final_markings, layout)
-    elif isinstance(net, AcceptingPetrinet):
+    elif isinstance(net, nt.AcceptingPetrinet):
         pnml, id_map = apnet2pnml(net, layout)
     else:
         raise ValueError('Do not recognize net class: {}'.format(net.__class__))
