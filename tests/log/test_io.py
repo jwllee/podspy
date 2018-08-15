@@ -271,6 +271,7 @@ def test_time_parse_log_xml(xlog_xml):
 #     assert isinstance(lt, tble.LogTable)
 
 
+@pytest.mark.slowtest
 def test_time_parse_BPIC2018():
     log_file = os.path.join('.', 'tests', 'testdata', 'BPIC2018.xes.gz')
     lt = io.import_log_table(log_file)
