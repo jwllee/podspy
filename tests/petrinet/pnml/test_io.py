@@ -29,8 +29,8 @@ def net_fp():
 
 
 @pytest.fixture
-def apna_fp():
-    return os.path.join('.', 'tests', 'testdata', 'simple-apna', 'simple.apna')
+def apna_fname():
+    return 'simple.apna'
 
 
 def test_import_pnml():
@@ -150,16 +150,25 @@ def test_export_petrinet_with_layout(net_fp):
     assert expected == out_f.getvalue()
 
 
-def test_import_apna(apna_fp):
-    with open(apna_fp, 'r') as f:
+def test_import_apna(apna_fname):
+    cwd = os.getcwd()
+    dirpath = os.path.join('.', 'tests', 'testdata', 'simple-apna')
+    os.chdir(dirpath)
+    with open(apna_fname, 'r') as f:
         apna = io.import_apna_from_file(f)
 
     assert len(apna) == 2
 
-    apnet_0, apnet_1 = apna
+    apn_0, apn_1 = apna
 
-    assert isinstance(apnet_0, AcceptingPetrinet)
-    assert isinstance(apnet_1, AcceptingPetrinet)
+    assert isinstance(apn_0, AcceptingPetrinet)
+    assert isinstance(apn_1, AcceptingPetrinet)
 
-    # apnet_0
-    pnet_0, init_marking_0, final_markings_0 = apnet_0
+    # apn_0
+    pn_0, init_0, final_0 = apn_0
+
+    # apn_1
+    pn_1, init_1, final_1 = apn_1
+
+    os.chdir(cwd)
+
