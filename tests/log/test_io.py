@@ -273,7 +273,5 @@ def test_time_parse_log_xml(xlog_xml):
 
 def test_time_parse_BPIC2018():
     log_file = os.path.join('.', 'tests', 'testdata', 'BPIC2018.xes.gz')
-    lt = io.import_logtable(log_file)
+    lt = io.import_log_table(log_file)
     print('Log table is {}b'.format(sys.getsizeof(lt)))
-
-    assert 1 == 0
