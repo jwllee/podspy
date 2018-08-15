@@ -26,16 +26,6 @@ def test_ptnet2dot():
 
     G = vis.net2dot(ptnet, marking, layout='dot')
 
-    for t in ptnet.transitions:
-        logger.debug(list(G.get_node(t).attr.items()))
-
-    for p in ptnet.places:
-        logger.debug(list(G.get_node(p).attr.items()))
-
-    for e in ptnet.arcs:
-        logger.debug((e.src, e.target))
-        logger.debug(list(G.get_edge(e.src, e.target, key=e).attr.items()))
-
     # uncomment to draw out the figure
     # G.draw('./simple-with-marking.png')
 
@@ -43,6 +33,9 @@ def test_ptnet2dot():
 
     G = vis.net2dot(ptnet, layout='dot')
     # same as above
+    # with open('./dotfile', 'w') as f:
+    #     print(G, file=f)
+
     G.draw('./simple.png')
 
     assert isinstance(G, pgv.AGraph)
