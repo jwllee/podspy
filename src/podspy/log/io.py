@@ -39,7 +39,7 @@ CONTAINER = 'container'
 LIST = 'list'
 
 
-def import_xlog_from_file(fp):
+def import_log_table(fp):
     start = time.time()
     parser = etree.XMLParser(target=LogTableTarget())
     lt = etree.parse(fp, parser)
