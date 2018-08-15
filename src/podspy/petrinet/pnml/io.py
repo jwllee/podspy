@@ -66,6 +66,12 @@ def import_pnml_from_file(file):
     return pnml
 
 
+def import_apnml(file):
+    pnml = import_pnml_from_file(file)
+    net, init, final = pnml2ptnet(pnml)
+    return PetrinetFactory.new_accepting_petrinet(net, init, final)
+
+
 def import_apna_from_file(file):
     pass
 
