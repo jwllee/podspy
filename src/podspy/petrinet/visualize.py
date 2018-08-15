@@ -40,6 +40,7 @@ def add_trans_to_dotgraph(t, node_id, G):
 
     :param t: transition to add
     :param G: graph where transition is to be added
+    :param node_id: node id used for identifying transition in AGraph
     :return: graph node
     """
     attrs = {
@@ -63,6 +64,7 @@ def add_place_to_dotgraph(p, node_id, G, token=0):
     :param p: place to add
     :param G: graph where place is to be added
     :param token: number of tokens in place
+    :param node_id: node id used for identifying place in AGraph
     :return: graph node
     """
     attrs = {
@@ -82,8 +84,11 @@ def add_place_to_dotgraph(p, node_id, G, token=0):
 def add_arc_to_dotgraph(src, target, weight, edge_id, G):
     """Add :class:`Arc` to graphviz :class:`AGraph`
 
-    :param a: arc to add
     :param G: graph where arc is to be added
+    :param src: arc source
+    :param target: arc target
+    :param weight: arc weight
+    :param edge_id: edge id used for identifying arc in AGraph
     :return: graph edge
     """
     # see arrow types @ http://www.graphviz.org/doc/info/attrs.html#d:ratio
@@ -106,7 +111,9 @@ def add_arc_to_dotgraph(src, target, weight, edge_id, G):
 def add_inhibitor_arc_to_dotgraph(src, target, edge_id, G):
     """Add :class:`InhibitorArc` to graphviz :class:`AGraph`
 
-    :param a: inhibitor arc to add
+    :param src: arc source
+    :param target: arc target
+    :param edge_id: edge id used for identifying arc in AGraph
     :param G: graph where arc is to be added
     :return: graph edge
     """
@@ -124,7 +131,9 @@ def add_inhibitor_arc_to_dotgraph(src, target, edge_id, G):
 def add_reset_arc_to_dotgraph(src, target, edge_id, G):
     """Add :class:`ResetArc` to graphviz :class:`AGraph`
 
-    :param a: reset arc to add
+    :param src: arc source
+    :param target: arc target
+    :param edge_id: edge id used for identifying arc in AGraph
     :param G: graph where arc is to be added
     :return: graph edge
     """
