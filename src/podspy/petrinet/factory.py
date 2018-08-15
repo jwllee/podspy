@@ -40,15 +40,35 @@ class PetrinetFactory:
 
         for p in pn.places:
             # place is part of the initial marking if it does not have ingoing arcs
-            pass
+            if p not in pn.in_edge_map:
+                init_marking.add(p, weight=1)
+            # place is part of the final marking if it does not have outgoing arcs
+            if p not in pn.out_edge_map:
+                final_marking = smc.Marking()
+                final_marking.add(p, weight=1)
+                final_markings.add(final_marking)
 
+        # create an empty final marking if necessary
+        if len(final_markings) == 0:
+            final_markings.add(smc.Marking())
+
+        return init_marking, final_markings
 
     @classmethod
-    def new_accepting_petrinet(cls, label, init_marking=None, final_markings=set()):
+    def new_accepting_petrinet(cls, label, init_marking=None, final_markings=None):
         pn = PetrinetFactory.new_petrinet(label)
         if init_marking is None or len(final_markings) == 0:
             init, final = PetrinetFactory.derive_marking(pn)
+
+            if init_marking is None:
+                init_marking = init
+
+            if final_markings is None:
+                final_markings = final
+
         apn = AcceptingPetrinet(pn, init_marking, final_markings)
+
+        return apn
 
     @classmethod
     def clone_petrinet(cls, net):
