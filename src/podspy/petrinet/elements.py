@@ -165,4 +165,4 @@ class Transition(PetrinetNode):
                                        self.label, self._is_invisible)
 
     def __str__(self):
-        return '{}, invisible: {}, {}'.format(self.label, self._is_invisible, self._id)
+        return '{}, invisible: {}'.format(self.label, self._is_invisible)
