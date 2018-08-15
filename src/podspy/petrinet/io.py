@@ -7,7 +7,7 @@ This module does stuff.
 
 
 from lxml import etree
-import logging
+import logging, os, sys
 
 from podspy.petrinet.pnml import elements as pnml_ems
 from podspy.petrinet.pnml import factory as pnml_fty
@@ -65,17 +65,26 @@ def import_pnml(file):
 
 
 def import_apnml(file):
-    pnml = import_pnml(file)
-    net, init, final = pnml2pn(pnml)
-    return fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
+    return import_pnml(file)
 
 
 def import_apna(file):
     apna = []
     for pn_fp in file:
-        with open(pn_fp.strip(), 'r') as f:
-            apn = import_apnml(f)
+        pn_fp = pn_fp.strip()
+        assert os.path.isfile(pn_fp) == True
+
+        with open(pn_fp, 'r') as f:
+            pnml = import_apnml(f)
+            net, init, final = pnml2pn(pnml)
+
+            # logger.debug('No. of trans: {}'.format(len(net.transitions)))
+            # for t in net.transitions:
+            #     logger.debug('Transition: {}'.format(t.label))
+
+            apn = fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
             apna.append(apn)
+
     return apna
 
 
