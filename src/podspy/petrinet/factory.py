@@ -57,7 +57,7 @@ class PetrinetFactory:
     @classmethod
     def new_accepting_petrinet(cls, net, init_marking=None, final_markings=None):
         if init_marking is None or len(final_markings) == 0:
-            init, final = PetrinetFactory.derive_marking(pn)
+            init, final = PetrinetFactory.derive_marking(net)
 
             if init_marking is None:
                 init_marking = init
