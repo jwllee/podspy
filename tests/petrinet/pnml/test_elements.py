@@ -6,7 +6,7 @@ This module tests classes in pnml element module.
 """
 
 
-from podspy.petrinet.pnml.element import *
+from podspy.petrinet.pnml.elements import *
 
 
 __author__ = "Wai Lam Jonathan Lee"

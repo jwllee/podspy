@@ -7,8 +7,8 @@ This module test classes in base module.
 
 
 from podspy.petrinet.pnml.base import *
-from podspy.petrinet.pnml import element as emt
-from podspy.util import attribute as attrib
+from podspy.petrinet.pnml import elements as emt
+from podspy.utils import attributes as attrib
 from collections import namedtuple
 
 

@@ -14,7 +14,7 @@ import pandas as pd
 from opyenxes.data_in.XUniversalParser import XUniversalParser
 from opyenxes.factory.XFactory import XFactory
 
-from .constant import *
+from .constants import *
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"

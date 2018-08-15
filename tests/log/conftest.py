@@ -8,7 +8,7 @@ import functools as fts
 import itertools as its
 
 from podspy.log.table import LogTable
-import podspy.log.constant as const
+import podspy.log.constants as const
 
 from opyenxes.factory.XFactory import XFactory
 from opyenxes.model.XAttributable import XAttributable

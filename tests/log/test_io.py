@@ -12,7 +12,7 @@ from urllib.request import urlparse
 import numpy as np
 from lxml import etree
 
-from podspy.log import constant, io
+from podspy.log import constants, io
 from podspy.log import table as tble
 
 
@@ -67,7 +67,7 @@ def xevent_xml(request):
      },
      # check using df.to_dict(orient='list')
      {
-         constant.CASEID: ['173694', '173694', '173694'],
+         constants.CASEID: ['173694', '173694', '173694'],
          'concept:name': ['A_SUBMITTED', 'A_PARTLYSUBMITTED', 'A_ACCEPTED'],
          'lifecycle:transition': ['COMPLETE', np.nan, np.nan]
      }),
@@ -91,7 +91,7 @@ def xevent_xml(request):
          'AMOUNT_REQ': '15000'
      },
      {
-         constant.CASEID: ['173697', '173697'],
+         constants.CASEID: ['173697', '173697'],
          'concept:name': ['A_SUBMITTED', 'A_DECLINED'],
          'lifecycle:transition': ['COMPLETE', np.nan]
      })
@@ -190,7 +190,7 @@ def xtrace_xml(request):
         },
         # event df
         {
-            constant.CASEID: ['173694', '173694', '173694', '173697', '173697'],
+            constants.CASEID: ['173694', '173694', '173694', '173697', '173697'],
             'concept:name': ['A_SUBMITTED', 'A_PARTLYSUBMITTED', 'A_ACCEPTED',
                              'A_SUBMITTED', 'A_DECLINED'],
             'lifecycle:transition': ['COMPLETE', np.nan, np.nan, 'COMPLETE', np.nan]

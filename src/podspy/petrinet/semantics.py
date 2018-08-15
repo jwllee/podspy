@@ -10,8 +10,8 @@ import pandas as pd
 import numpy as np
 import itertools as its
 
-from podspy.util.collection import SortedMultiSet
-from podspy.petrinet.element import *
+from podspy.utils.multiset import SortedMultiSet
+from podspy.petrinet.elements import *
 
 
 __author__ = "Wai Lam Jonathan Lee"

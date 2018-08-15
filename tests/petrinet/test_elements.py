@@ -7,8 +7,8 @@ This module does stuff.
 
 
 import pytest
-from podspy.petrinet.element import *
-from podspy.petrinet.element import PetrinetEdge
+from podspy.petrinet.elements import *
+from podspy.petrinet.elements import PetrinetEdge
 
 
 __author__ = "Wai Lam Jonathan Lee"

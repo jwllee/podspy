@@ -5,7 +5,7 @@
 This module contains Petri net factory to make petri nets.
 """
 
-from podspy.petrinet import net as nt
+from podspy.petrinet import nets as nt
 from podspy.petrinet import semantics as smc
 
 

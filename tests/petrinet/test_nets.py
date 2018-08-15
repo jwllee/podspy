@@ -8,7 +8,7 @@ This module tests petri net classes.
 
 from podspy.petrinet.factory import *
 from podspy.petrinet import semantics as smc
-from podspy.petrinet import net as nt
+from podspy.petrinet import nets as nt
 
 import pandas as pd
 import numpy as np

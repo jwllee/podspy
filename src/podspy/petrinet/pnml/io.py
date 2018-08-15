@@ -10,13 +10,13 @@ from lxml import etree
 import logging
 
 from podspy.petrinet.pnml.factory import *
-from podspy.petrinet.pnml.element import *
+from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.pnml.base import *
 from podspy.petrinet.pnml.extension import *
 
 from podspy.petrinet.factory import *
 from podspy.petrinet.semantics import *
-from podspy.petrinet import net as nt
+from podspy.petrinet import nets as nt
 
 
 __author__ = "Wai Lam Jonathan Lee"

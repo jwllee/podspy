@@ -7,7 +7,7 @@ This module tests classes in directed graph module.
 
 
 from podspy.graph.directed import AbstractDirectedGraphEdge
-from podspy.petrinet.element import *
+from podspy.petrinet.elements import *
 
 
 __author__ = "Wai Lam Jonathan Lee"

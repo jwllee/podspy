@@ -10,9 +10,9 @@ import pytest
 
 from podspy.petrinet.pnml.factory import PnmlFactory
 from podspy.petrinet.pnml.base import *
-from podspy.petrinet.pnml.element import *
+from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.pnml.extension import *
-from podspy.petrinet.pnml.graphic import *
+from podspy.petrinet.pnml.graphics import *
 
 
 __author__ = "Wai Lam Jonathan Lee"

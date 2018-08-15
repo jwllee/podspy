@@ -9,7 +9,7 @@ import pytest, logging
 import pandas as pd
 import numpy as np
 from podspy.log.table import *
-import podspy.log.constant as const
+import podspy.log.constants as const
 
 from opyenxes.extension.XExtensionManager import XExtensionManager
 from pandas.testing import assert_frame_equal

@@ -16,7 +16,7 @@ import numpy as np
 import functools as fts
 import itertools as its
 
-import podspy.log.constant as const
+import podspy.log.constants as const
 
 from opyenxes.model.XLog import XLog
 from opyenxes.model.XTrace import XTrace

@@ -7,7 +7,7 @@ This module contains petri net classes.
 
 from abc import abstractmethod
 from podspy.graph import directed
-from podspy.petrinet.element import *
+from podspy.petrinet.elements import *
 from podspy.petrinet.semantics import Marking
 from podspy.petrinet import factory as fty
 import pandas as pd

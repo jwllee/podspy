@@ -9,8 +9,8 @@ import os, logging, pytest
 from io import StringIO
 
 from podspy.petrinet.pnml import io
-from podspy.petrinet.net import *
-from podspy.petrinet.pnml.element import *
+from podspy.petrinet.nets import *
+from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.semantics import *
 import podspy.petrinet.visualize as vis
 from podspy.petrinet import factory as fty

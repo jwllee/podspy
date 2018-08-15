@@ -5,7 +5,7 @@
 This module does stuff.
 """
 
-from podspy.util.pattern import Singleton
+from podspy.utils.patterns import Singleton
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"

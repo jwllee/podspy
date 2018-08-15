@@ -6,7 +6,7 @@ This module tests the petrinet semantics module.
 """
 
 from podspy.petrinet.semantics import *
-from podspy.petrinet.element import *
+from podspy.petrinet.elements import *
 
 import pandas as pd
 import numpy as np

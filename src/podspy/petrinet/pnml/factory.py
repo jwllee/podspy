@@ -7,9 +7,9 @@ This module contains pnml factory class.
 import logging
 
 from podspy.petrinet.pnml.base import *
-from podspy.petrinet.pnml.element import *
+from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.pnml.extension import *
-from podspy.petrinet.pnml.graphic import *
+from podspy.petrinet.pnml.graphics import *
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"

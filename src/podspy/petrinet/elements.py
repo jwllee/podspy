@@ -10,8 +10,8 @@ from abc import abstractmethod
 import uuid, logging
 
 from podspy.graph import directed
-from podspy.util import attribute as attrib
-from podspy.util import shape, color
+from podspy.utils import attributes as attrib
+from podspy.utils import shapes, colors
 
 
 logger = logging.getLogger(__file__)
@@ -129,7 +129,7 @@ class ResetArc(PetrinetEdge):
 class Place(PetrinetNode):
     def __init__(self, graph, label, *args, **kwargs):
         super().__init__(graph, label, *args, **kwargs)
-        self.map[attrib.SHAPE] = shape.ELLIPSE
+        self.map[attrib.SHAPE] = shapes.ELLIPSE
         self.map[attrib.RESIZABLE] = True
         self.map[attrib.SIZE] = (25, 25)
         self.map[attrib.SHOWLABEL] = False
@@ -154,7 +154,7 @@ class Transition(PetrinetNode):
         if self._is_invisible:
             self.map[attrib.SIZE] = (30, 30)
             self.map[attrib.SHOWLABEL] = False
-            self.map[attrib.FILLCOLOR] = color.BLACK
+            self.map[attrib.FILLCOLOR] = colors.BLACK
         else:
             self.map[attrib.SIZE] = (50, 40)
             self.map[attrib.SHOWLABEL] = True

@@ -7,7 +7,7 @@ This module test classes in the collection module.
 
 
 import pytest
-from podspy.util.collection import *
+from podspy.utils.multiset import *
 
 
 __author__ = "Wai Lam Jonathan Lee"

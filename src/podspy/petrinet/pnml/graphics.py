@@ -5,9 +5,9 @@
 This module contains PNML graphic classes.
 """
 from podspy.petrinet.pnml.base import PnmlElement
-from podspy.util import attribute as atr
-from podspy.util import layout as lot
-from podspy.petrinet.element import *
+from podspy.utils import attributes as atr
+from podspy.utils import layout as lot
+from podspy.petrinet.elements import *
 from enum import Enum
 from lxml import etree
 

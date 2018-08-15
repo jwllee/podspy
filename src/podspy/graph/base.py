@@ -5,7 +5,7 @@
 This module contains base graph classes.
 """
 
-from podspy.util import attribute as attrib
+from podspy.utils import attributes as attrib
 
 from abc import ABC, abstractmethod
 import uuid, logging
