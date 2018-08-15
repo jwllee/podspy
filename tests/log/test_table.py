@@ -32,11 +32,6 @@ def test_log_table_construct():
     assert isinstance(table, LogTable) == True
 
 
-@pytest.fixture()
-def factory():
-    return XLogToLogTable()
-
-
 def test_get_event_identity_list(a_log_table, an_event_clf_and_event_identity_list):
     # set the event classifier of the log table
     clf_name = an_event_clf_and_event_identity_list[0]
