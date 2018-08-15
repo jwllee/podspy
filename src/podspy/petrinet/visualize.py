@@ -8,6 +8,9 @@ This module contains classes to visualize petri nets.
 
 import pygraphviz as pgv
 import logging
+import itertools as its
+from podspy.petrinet import nets as nts
+from podspy.petrinet import semantics as smc
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -169,6 +172,54 @@ def net2dot(net, marking=None, layout='dot', rankdir='LR'):
 
     for a in net.inhibitor_arcs:
         add_inhibitor_arc_to_dotgraph(a, G)
+
+    G.layout(prog=layout)
+    return G
+
+
+def netarray2dot(nets, layout='dot', rankdir='LR', node_constraints=list(), constraint_style='invis'):
+    """
+
+    :param nets:
+    :param node_constraints: list of node tuples where the nodes of each tuple should be connected
+                             by edge constraint
+    :param constraint_style: node constraint edge line style
+    :return: converted graph
+    """
+    G = pgv.AGraph(rankdir=rankdir)
+
+    for net in nets:
+        init, finals = smc.Marking(), set()
+
+        if isinstance(net, nts.AcceptingPetrinet):
+            net, init, finals = net
+
+        for t in net.transitions:
+            add_trans_to_dotgraph(t, G)
+
+        for p in net.places:
+            token = init.occurrences(p)
+            add_place_to_dotgraph(p, G, token)
+
+        for a in net.arcs:
+            add_arc_to_dotgraph(a, G)
+
+        for a in net.reset_arcs:
+            add_reset_arc_to_dotgraph(a, G)
+
+        for a in net.inhibitor_arcs:
+            add_inhibitor_arc_to_dotgraph(a, G)
+
+    for group in node_constraints:
+        # add edges between transitions with the same label
+        for node_pair in its.combinations(group, 2):
+            n0, n1 = node_pair
+            attrs = {
+                'style': constraint_style,
+                'len': 10,
+            }
+            arc_name = '{}-{}'.format(n0.label, n1.label)
+            G.add_edge(n0, n1, key=arc_name, **attrs)
 
     G.layout(prog=layout)
     return G
