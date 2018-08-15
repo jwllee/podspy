@@ -13,6 +13,7 @@ from podspy.petrinet.net import *
 from podspy.petrinet.pnml.element import *
 from podspy.petrinet.semantics import *
 import podspy.petrinet.visualize as vis
+from podspy.petrinet import factory as fty
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -134,11 +135,11 @@ def test_export_petrinet_with_layout(net_fp):
 
     assert isinstance(marking, Marking)
 
-    apnet = AcceptingPetrinet(net, marking, final_markings)
+    apn = fty.PetrinetFactory.new_accepting_petrinet(net, marking, final_markings)
 
     out_f = StringIO('out_f')
 
-    io.export_net(apnet, out_f, layout=G)
+    io.export_net(apn, out_f, layout=G)
 
     with open(net_fp, 'r') as f:
         expected = f.read()
