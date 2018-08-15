@@ -38,7 +38,7 @@ class TestPnmlAnnotation:
     def test_make_annotation(self):
         annot = MockPnmlAnnotation()
         assert isinstance(annot, MockPnmlAnnotation)
-        assert isinstance(annot, PnmlAnnotation)
+        assert isinstance(annot, emt.PnmlAnnotation)
 
     def test_convert_to_net_has_text(self):
         text = 'hello world'
