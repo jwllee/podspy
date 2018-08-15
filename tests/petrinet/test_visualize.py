@@ -7,8 +7,7 @@ This module tests the visualize module.
 
 
 import os, logging
-from podspy.petrinet.pnml import io
-from podspy.petrinet import visualize as vis
+from podspy.petrinet import visualize as vis, io
 import pygraphviz as pgv
 
 

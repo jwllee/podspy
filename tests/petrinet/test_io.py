@@ -8,13 +8,11 @@ This module tests pnml io module.
 import os, logging, pytest
 from io import StringIO
 
-from podspy.petrinet.pnml import io
 from podspy.petrinet.nets import *
 from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.semantics import *
 import podspy.petrinet.visualize as vis
-from podspy.petrinet import factory as fty
-
+from podspy.petrinet import factory as fty, io
 
 __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
