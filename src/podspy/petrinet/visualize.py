@@ -35,22 +35,18 @@ def export_graphviz(net, out_file='net.dot', marking=None, layout='dot'):
     return G
 
 
-def add_trans_to_dotgraph(t, G, id_func=None):
+def add_trans_to_dotgraph(t, node_id, G):
     """Add :class:`Transition` to graphviz :class:`AGraph`
 
     :param t: transition to add
     :param G: graph where transition is to be added
     :return: graph node
     """
-    default_id_func = lambda t: str(t._id)
-    id_func = default_id_func if id_func is None else id_func
-
     attrs = {
         'label': t.label,
         'shape': 'square',
     }
 
-    node_id = id_func(t)
     G.add_node(node_id, **attrs)
     n = G.get_node(node_id)
 
@@ -61,7 +57,7 @@ def add_trans_to_dotgraph(t, G, id_func=None):
     return n
 
 
-def add_place_to_dotgraph(p, G, token=0, id_func=None):
+def add_place_to_dotgraph(p, node_id, G, token=0):
     """Add :class:`Place` to graphviz :class:`AGraph`
 
     :param p: place to add
@@ -69,15 +65,11 @@ def add_place_to_dotgraph(p, G, token=0, id_func=None):
     :param token: number of tokens in place
     :return: graph node
     """
-    default_id_func = lambda p: str(p._id)
-    id_func = default_id_func if id_func is None else id_func
-
     attrs = {
         'shape': 'circle',
         'label': ''
     }
 
-    node_id = id_func(p)
     G.add_node(node_id, **attrs)
     n = G.get_node(node_id)
 
@@ -168,15 +160,17 @@ def net2dot(net, marking=None, layout='dot', rankdir='LR', node_id_func=None, ed
 
     # add transitions
     for t in net.transitions:
-        add_trans_to_dotgraph(t, G, node_id_func)
+        node_id = node_id_func(t)
+        add_trans_to_dotgraph(t, node_id, G)
 
     # add places
     for p in net.places:
+        node_id = node_id_func(p)
         token = 0
         if marking:
             token = marking.occurrences(p)
 
-        add_place_to_dotgraph(p, G, token, node_id_func)
+        add_place_to_dotgraph(p, node_id, G, token)
 
     # add edges
     for a in net.arcs:
@@ -224,11 +218,13 @@ def netarray2dot(nets, layout='dot', rankdir='LR', node_id_func=None, edge_id_fu
             net, init, finals = net
 
         for t in net.transitions:
-            add_trans_to_dotgraph(t, G, node_id_func)
+            node_id = node_id_func(t)
+            add_trans_to_dotgraph(t, node_id, G)
 
         for p in net.places:
+            node_id = node_id_func(p)
             token = init.occurrences(p)
-            add_place_to_dotgraph(p, G, token, node_id_func)
+            add_place_to_dotgraph(p, node_id, G, token)
 
         for a in net.arcs:
             src, target, weight = str(a.src._id), str(a.target._id), a.weight
