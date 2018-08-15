@@ -81,7 +81,8 @@ class TestPetrinet:
 
 class TestAcceptingPetrinet:
     def test_iterable(self):
-        apn = PetrinetFactory.new_accepting_petrinet('net_0')
+        pn = PetrinetFactory.new_petrinet('net_0')
+        apn = PetrinetFactory.new_accepting_petrinet(pn)
         pn, init, final = apn
 
         assert isinstance(pn, nt.Petrinet)
