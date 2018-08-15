@@ -88,17 +88,17 @@ def test_ptnet2pnml_without_layout(net_fp):
     assert pnml == converted_pnml
 
 
-def test_ptnet2pnml_with_layout(net_fp):
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
-
-    apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
-
-    G = vis.net2dot(apnet.net, apnet.init_marking, layout='dot')
-    converted_pnml = io.apn2pnml(apnet, G)
-
-    assert isinstance(converted_pnml, Pnml)
-    assert pnml == converted_pnml
+# def test_ptnet2pnml_with_layout(net_fp):
+#     with open(net_fp, 'r') as f:
+#         pnml = io.import_pnml(f)
+#
+#     apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
+#
+#     G = vis.net2dot(apnet.net, apnet.init_marking, layout='dot')
+#     converted_pnml = io.apn2pnml(apnet, G)
+#
+#     assert isinstance(converted_pnml, Pnml)
+#     assert pnml == converted_pnml
 
 
 def test_export_petrinet_without_layout(net_fp):
@@ -124,28 +124,28 @@ def test_export_petrinet_without_layout(net_fp):
     assert expected == out_f.getvalue()
 
 
-def test_export_petrinet_with_layout(net_fp):
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
-
-    net, marking, final_markings = io.pnml2pn(pnml)
-    G = vis.net2dot(net, marking, layout='dot')
-
-    assert isinstance(marking, Marking)
-
-    apn = fty.PetrinetFactory.new_accepting_petrinet(net, marking, final_markings)
-
-    out_f = StringIO('out_f')
-
-    io.export_net(apn, out_f, layout=G)
-
-    with open(net_fp, 'r') as f:
-        expected = f.read()
-
-    # with open('./parsed.pnml', 'w') as f:
-    #     io.export_pnml_to_file(apnet, f, layout=G)
-
-    assert expected == out_f.getvalue()
+# def test_export_petrinet_with_layout(net_fp):
+#     with open(net_fp, 'r') as f:
+#         pnml = io.import_pnml(f)
+#
+#     net, marking, final_markings = io.pnml2pn(pnml)
+#     G = vis.net2dot(net, marking, layout='dot')
+#
+#     assert isinstance(marking, Marking)
+#
+#     apn = fty.PetrinetFactory.new_accepting_petrinet(net, marking, final_markings)
+#
+#     out_f = StringIO('out_f')
+#
+#     io.export_net(apn, out_f, layout=G)
+#
+#     with open(net_fp, 'r') as f:
+#         expected = f.read()
+#
+#     # with open('./parsed.pnml', 'w') as f:
+#     #     io.export_pnml_to_file(apnet, f, layout=G)
+#
+#     assert expected == out_f.getvalue()
 
 
 def test_import_apna(apna_fname):
