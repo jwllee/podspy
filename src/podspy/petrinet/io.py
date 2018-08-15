@@ -9,14 +9,12 @@ This module does stuff.
 from lxml import etree
 import logging
 
-from podspy.petrinet.pnml.factory import *
-from podspy.petrinet.pnml.elements import *
-from podspy.petrinet.pnml.base import *
-from podspy.petrinet.pnml.extension import *
+from podspy.petrinet.pnml import elements as pnml_ems
+from podspy.petrinet.pnml import factory as pnml_fty
 
-from podspy.petrinet.factory import *
-from podspy.petrinet.semantics import *
-from podspy.petrinet import nets as nt
+from podspy.petrinet import factory as fty
+from podspy.petrinet import semantics as smc
+from podspy.petrinet import nets as nts
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -27,7 +25,7 @@ logger = logging.getLogger(__file__)
 
 
 def make_from_element(element, parent_cls):
-    pnml = PnmlFactory.create_pnml(element.tag, parent_cls)
+    pnml = pnml_fty.PnmlFactory.create_pnml(element.tag, parent_cls)
 
     # logger.debug('Making {!r} into {!r}'.format(element, pnml.__class__.__name__))
 
@@ -42,7 +40,7 @@ def make_from_element(element, parent_cls):
         # recursively call make from element on the child element
         pnml_child = make_from_element(c, pnml.__class__)
 
-        if isinstance(pnml, PnmlPlace):
+        if isinstance(pnml, pnml_ems.PnmlPlace):
             logger.debug('Adding {!r} as child of {!r}'.format(c, pnml.name))
         # if isinstance(pnml, PnmlNet):
         #     logger.debug('Adding {!r} as child of {!r}'.format(pnml_child, pnml))
@@ -59,7 +57,7 @@ def import_pnml(file):
     root = tree.getroot()
 
     # should be <pnml>
-    assert root.tag == Pnml.TAG, 'Root tag does not equal {}, not a pnml file'.format(Pnml.TAG)
+    assert root.tag == pnml_ems.Pnml.TAG, 'Root tag does not equal {}, not a pnml file'.format(pnml_ems.Pnml.TAG)
 
     pnml = make_from_element(root, None)
 
@@ -69,7 +67,7 @@ def import_pnml(file):
 def import_apnml(file):
     pnml = import_pnml(file)
     net, init, final = pnml2pn(pnml)
-    return PetrinetFactory.new_accepting_petrinet(net, init, final)
+    return fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
 
 
 def import_apna(file):
@@ -84,8 +82,8 @@ def import_apna(file):
 def pnml2pn(pnml):
     pnml_net = pnml.net_list[0]
     net_label = pnml_net.name.text.text if pnml_net.name else 'net0'
-    net = PetrinetFactory.new_petrinet(net_label)
-    marking = Marking()
+    net = fty.PetrinetFactory.new_petrinet(net_label)
+    marking = smc.Marking()
     final_markings = set()
     pnml.convert_to_net(net, marking, final_markings)
     return net, marking, final_markings
@@ -94,7 +92,7 @@ def pnml2pn(pnml):
 def pn2pnml(net, marking=None, final_markings=None, layout=None):
     marked_nets = {net: marking}
     final_marked_nets = {net: final_markings}
-    pnml, id_map = PnmlElementFactory.net2pnml(marked_nets, final_marked_nets, layout)
+    pnml, id_map = pnml_fty.PnmlElementFactory.net2pnml(marked_nets, final_marked_nets, layout)
     return pnml, id_map
 
 
@@ -103,9 +101,9 @@ def apn2pnml(net, layout=None):
 
 
 def export_net(net, file, marking=None, final_markings=None, layout=None):
-    if isinstance(net, nt.AbstractResetInhibitorNet):
+    if isinstance(net, nts.AbstractResetInhibitorNet):
         pnml, id_map = pn2pnml(net, marking, final_markings, layout)
-    elif isinstance(net, nt.AcceptingPetrinet):
+    elif isinstance(net, nts.AcceptingPetrinet):
         pnml, id_map = apn2pnml(net, layout)
     else:
         raise ValueError('Do not recognize net class: {}'.format(net.__class__))
