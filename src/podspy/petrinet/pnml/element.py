@@ -38,6 +38,7 @@ __all__ = [
     'PnmlReferenceTransition',
     'PnmlTransition',
     'PnmlArc',
+    'PnmlAnnotation',
     'PnmlArcType',
     'PnmlNet',
     'PnmlToolSpecific',
