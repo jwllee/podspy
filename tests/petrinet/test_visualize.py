@@ -44,9 +44,10 @@ def test_ptnet2dot():
 def test_netarray2dot():
     cwd = os.getcwd()
     apna_dir = os.path.join('.', 'tests', 'testdata', 'simple-apna')
-    os.chdir(apna_dir)
+    # os.chdir(apna_dir)
+    apna_fp = os.path.join(apna_dir, 'simple.apna')
 
-    with open('simple.apna', 'r') as f:
+    with open(apna_fp, 'r') as f:
         apna = io.import_apna(f)
 
     node_constraints = list()
@@ -69,7 +70,7 @@ def test_netarray2dot():
             # print('{} == {}: {}'.format(values[0], values[1], trans_eq))
 
     G = vis.netarray2dot(apna, node_constraints=node_constraints, constraint_style='dotted')
-    os.chdir(cwd)
+    # os.chdir(cwd)
 
     # with open('./dotfile', 'w') as f:
     #     print(G, file=f)
