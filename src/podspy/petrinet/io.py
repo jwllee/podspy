@@ -68,10 +68,13 @@ def import_apnml(file):
     return import_pnml(file)
 
 
-def import_apna(file):
+def import_apna(file, dirpath=None):
+    if dirpath is None:
+        dirpath = os.path.join(*(file.name.split(os.sep)[:-1]))
+
     apna = []
     for pn_fp in file:
-        pn_fp = pn_fp.strip()
+        pn_fp = os.path.join(dirpath, pn_fp.strip())
         assert os.path.isfile(pn_fp) == True
 
         with open(pn_fp, 'r') as f:
