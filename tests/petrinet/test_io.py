@@ -33,8 +33,7 @@ def apna_fname():
 
 def test_import_pnml():
     net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
+    pnml = io.import_pnml(net_fp)
 
     assert pnml is not None
     assert isinstance(pnml, Pnml)
@@ -42,8 +41,7 @@ def test_import_pnml():
 
 def test_import_petrinet():
     net_fp = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
+    pnml = io.import_pnml(net_fp)
 
     net, marking, final_markings = io.pnml2pn(pnml)
 
@@ -77,8 +75,7 @@ def test_import_petrinet():
 
 
 def test_ptnet2pnml_without_layout(net_fp):
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
+    pnml = io.import_pnml(net_fp)
 
     apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
 
@@ -102,8 +99,7 @@ def test_ptnet2pnml_without_layout(net_fp):
 
 
 def test_export_petrinet_without_layout(net_fp):
-    with open(net_fp, 'r') as f:
-        pnml = io.import_pnml(f)
+    pnml = io.import_pnml(net_fp)
 
     net, marking, final_markings = io.pnml2pn(pnml)
 
@@ -118,8 +114,8 @@ def test_export_petrinet_without_layout(net_fp):
     with open(net_fp, 'r') as f:
         expected = f.read()
 
-    with open('./parsed.pnml', 'w') as f:
-        io.export_net(apnet, f)
+    parsed_fp = './parsed.pnml'
+    io.export_net(apnet, parsed_fp)
 
     assert expected == out_f.getvalue()
 
