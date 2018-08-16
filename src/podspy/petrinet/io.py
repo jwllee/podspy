@@ -68,25 +68,27 @@ def import_apnml(file):
     return import_pnml(file)
 
 
-def import_apna(file, dirpath=None):
+def import_apna(fp, dirpath=None):
     if dirpath is None:
-        dirpath = os.path.join(*(file.name.split(os.sep)[:-1]))
+        path_segs = fp.split(os.sep)[:-1]
+        dirpath = os.path.join(*path_segs)
 
     apna = []
-    for pn_fp in file:
-        pn_fp = os.path.join(dirpath, pn_fp.strip())
-        assert os.path.isfile(pn_fp) == True
+    with open(fp, 'r') as f0:
+        for pn_fp in f0:
+            pn_fp = os.path.join(dirpath, pn_fp.strip())
+            assert os.path.isfile(pn_fp) == True
 
-        with open(pn_fp, 'r') as f:
-            pnml = import_apnml(f)
-            net, init, final = pnml2pn(pnml)
+            with open(pn_fp, 'r') as f1:
+                pnml = import_apnml(f1)
+                net, init, final = pnml2pn(pnml)
 
-            # logger.debug('No. of trans: {}'.format(len(net.transitions)))
-            # for t in net.transitions:
-            #     logger.debug('Transition: {}'.format(t.label))
+                # logger.debug('No. of trans: {}'.format(len(net.transitions)))
+                # for t in net.transitions:
+                #     logger.debug('Transition: {}'.format(t.label))
 
-            apn = fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
-            apna.append(apn)
+                apn = fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
+                apna.append(apn)
 
     return apna
 
