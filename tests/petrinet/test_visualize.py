@@ -36,7 +36,7 @@ def test_ptnet2dot():
     # with open('./dotfile', 'w') as f:
     #     print(G, file=f)
 
-    G.draw('./simple.png')
+    # G.draw('./simple.png')
 
     assert isinstance(G, pgv.AGraph)
 
@@ -47,8 +47,7 @@ def test_netarray2dot():
     # os.chdir(apna_dir)
     apna_fp = os.path.join(apna_dir, 'simple.apna')
 
-    with open(apna_fp, 'r') as f:
-        apna = io.import_apna(f)
+    apna = io.import_apna(apna_fp)
 
     node_constraints = list()
     label2trans = dict()
@@ -75,6 +74,6 @@ def test_netarray2dot():
     # with open('./dotfile', 'w') as f:
     #     print(G, file=f)
 
-    G.draw('./simple-apna.png')
+    # G.draw('./simple-apna.png')
 
 

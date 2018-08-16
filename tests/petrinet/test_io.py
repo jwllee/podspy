@@ -149,11 +149,9 @@ def test_export_petrinet_without_layout(net_fp):
 
 
 def test_import_apna(apna_fname):
-    cwd = os.getcwd()
     dirpath = os.path.join('.', 'tests', 'testdata', 'simple-apna')
-    os.chdir(dirpath)
-    with open(apna_fname, 'r') as f:
-        apna = io.import_apna(f)
+    apna_fp = os.path.join(dirpath, apna_fname)
+    apna = io.import_apna(apna_fp)
 
     assert len(apna) == 2
 
@@ -167,6 +165,3 @@ def test_import_apna(apna_fname):
 
     # apn_1
     pn_1, init_1, final_1 = apn_1
-
-    os.chdir(cwd)
-
