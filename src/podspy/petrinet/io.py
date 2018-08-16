@@ -52,8 +52,10 @@ def make_from_element(element, parent_cls):
     return pnml
 
 
-def import_pnml(file):
-    tree = etree.parse(file)
+def import_pnml(fp):
+    with open(str(fp), 'r') as f:
+        tree = etree.parse(f)
+
     root = tree.getroot()
 
     # should be <pnml>
@@ -64,13 +66,13 @@ def import_pnml(file):
     return pnml
 
 
-def import_apnml(file):
-    return import_pnml(file)
+def import_apnml(fp):
+    return import_pnml(fp)
 
 
 def import_apna(fp, dirpath=None):
     if dirpath is None:
-        path_segs = fp.split(os.sep)[:-1]
+        path_segs = str(fp).split(os.sep)[:-1]
         dirpath = os.path.join(*path_segs)
 
     apna = []
@@ -79,16 +81,15 @@ def import_apna(fp, dirpath=None):
             pn_fp = os.path.join(dirpath, pn_fp.strip())
             assert os.path.isfile(pn_fp) == True
 
-            with open(pn_fp, 'r') as f1:
-                pnml = import_apnml(f1)
-                net, init, final = pnml2pn(pnml)
+            pnml = import_apnml(pn_fp)
+            net, init, final = pnml2pn(pnml)
 
-                # logger.debug('No. of trans: {}'.format(len(net.transitions)))
-                # for t in net.transitions:
-                #     logger.debug('Transition: {}'.format(t.label))
+            # logger.debug('No. of trans: {}'.format(len(net.transitions)))
+            # for t in net.transitions:
+            #     logger.debug('Transition: {}'.format(t.label))
 
-                apn = fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
-                apna.append(apn)
+            apn = fty.PetrinetFactory.new_accepting_petrinet(net, init, final)
+            apna.append(apn)
 
     return apna
 
@@ -114,7 +115,7 @@ def apn2pnml(net):
     return pn2pnml(net.net, net.init_marking, net.final_markings)
 
 
-def export_net(net, file, marking=None, final_markings=None):
+def export_net(net, fp, marking=None, final_markings=None, append=False):
     if isinstance(net, nts.AbstractResetInhibitorNet):
         pnml, id_map = pn2pnml(net, marking, final_markings)
     elif isinstance(net, nts.AcceptingPetrinet):
@@ -130,6 +131,8 @@ def export_net(net, file, marking=None, final_markings=None):
 
     string = etree.tostring(root, encoding=encoding, pretty_print=pretty_print)
 
-    file.write(string.decode())
+    mode = 'a' if append else 'w'
+    with open(str(fp), mode) as f:
+        f.write(string.decode())
 
     return root, pnml, id_map
