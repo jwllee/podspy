@@ -4,7 +4,7 @@
 
 This module contains unit tests for the module.
 """
-import pytest
+import pytest, logging
 import pandas as pd
 import numpy as np
 
@@ -13,6 +13,10 @@ from podspy.petrinet import factory as fty
 from podspy.petrinet import elements as ems
 from podspy.petrinet import semantics as smc
 from podspy.alignment import product as pdt
+from podspy.petrinet import visualize as vis
+
+
+logger = logging.getLogger(__file__)
 
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -21,51 +25,83 @@ __email__ = "walee@uc.cl"
 
 @pytest.fixture(params=[
     ['a', 'b', 'c'],
-    ['a', 'a', 'b', 'c']
+    # ['a', 'a', 'b', 'c'] does not work with duplicated event labels due to lack of mapping
 ])
 def trace(request):
     return request.param
 
 
 class TestSyncNetProduct:
-    def test_trace2apn(self, trace):
-        net = fty.PetrinetFactory.new_petrinet('net0')
-        snp = pdt.SyncNetProduct(trace, net)
+    def test_product(self):
+        # make net
+        net0 = fty.PetrinetFactory.new_petrinet('net0')
 
-        trace_apn = snp.trace2apn(trace)
+        # places
+        p_init = net0.add_place('init')
+        p1 = net0.add_place('p1')
+        p2 = net0.add_place('p2')
+        p3 = net0.add_place('p3')
+        p4 = net0.add_place('p4')
+        p5 = net0.add_place('p5')
+        p_out = net0.add_place('out')
 
-        assert isinstance(trace_apn, nts.AcceptingPetrinet)
-        pn, init, final = trace_apn
+        # transitions
+        trans_a = net0.add_transition('a')
+        trans_b = net0.add_transition('b')
+        trans_c = net0.add_transition('c')
+        trans_d = net0.add_transition('d')
+        trans_e = net0.add_transition('e')
+        # trans_f = net0.add_transition('f')
+        trans_g = net0.add_transition('g')
+        trans_h = net0.add_transition('h')
 
-        assert isinstance(pn, nts.Petrinet)
-        assert isinstance(init, smc.Marking)
+        # arcs
+        # place to transition
+        net0.add_arc(p_init, trans_a)
+        net0.add_arc(p1, trans_b)
+        net0.add_arc(p1, trans_c)
+        net0.add_arc(p3, trans_e)
+        net0.add_arc(p2, trans_d)
+        net0.add_arc(p4, trans_e)
+        # net0.add_arc(p5, trans_f)
+        net0.add_arc(p5, trans_g)
+        net0.add_arc(p5, trans_h)
 
-        # check trace events are in transitions
-        trans_map = {t.label:t for t in pn.transitions}
+        # transition to place
+        net0.add_arc(trans_a, p1)
+        net0.add_arc(trans_a, p2)
+        net0.add_arc(trans_b, p3)
+        net0.add_arc(trans_c, p3)
+        net0.add_arc(trans_d, p4)
+        net0.add_arc(trans_e, p5)
+        # net0.add_arc(trans_f, p1)
+        # net0.add_arc(trans_f, p2)
+        net0.add_arc(trans_g, p_out)
+        net0.add_arc(trans_h, p_out)
 
-        for event in trace:
-            assert event in trans_map
+        # initial marking
+        init = smc.Marking([p_init])
+        finals = {smc.Marking([p_out])}
+        apn = fty.PetrinetFactory.new_accepting_petrinet(net0, init, finals)
 
-        # check that there is an arc going from p0 -> t -> p1
-        for i in range(len(trace)):
-            event_i = trace[i]
-            trans_i = trans_map[event_i]
+        # output the net
+        G = vis.net2dot(net0, marking=init)
+        G.draw('./example.png')
 
-            in_edges = pn.in_edge_map[trans_i]
-            out_edges = pn.out_edge_map[trans_i]
+        # fitting trace
+        trace_0 = ['a', 'c', 'd', 'e', 'g', 'h']
 
-            assert len(in_edges) == 1
-            assert len(out_edges) == 1
+        # looped trace
+        trace_1 = ['a', 'c', 'd', 'e', 'f', 'b', 'd', 'e', 'g', 'h']
 
-            in_edge = in_edges.pop()
-            out_edge = out_edges.pop()
 
-            assert isinstance(in_edge.src, ems.Place)
-            assert isinstance(out_edge.target, ems.Place)
+        # output the snp
+        # trace 0
+        snp_0 = pdt.SyncNetProductFactory.new_snp(trace_0, apn)
+        G = vis.net2dot(snp_0.snp.net, snp_0.snp.init_marking, layout='dot')
+        G.draw('./example-snp.png')
 
-            if i == 0:
-                assert init.occurrences(in_edge.src) == 1
-
-            if i == (len(trace) - 1):
-                assert final.pop().occurrences(out_edge.target) == 1
-
+        # trace 1
+        snp_1 = pdt.SyncNetProductFactory.new_snp(trace_1, apn)
+        G = vis.net2dot(snp_1.snp.net, snp_1.snp.init_marking, layout='dot')
+        G.draw('./example-snp-1.png')
