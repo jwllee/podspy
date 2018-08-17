@@ -135,7 +135,7 @@ class Place(PetrinetNode):
         self.map[attrib.SHOWLABEL] = False
 
     def __repr__(self):
-        return '{}()'.format(self.__class__.__name__)
+        return '{}({})'.format(self.__class__.__name__, self.label)
 
 
 class Transition(PetrinetNode):
