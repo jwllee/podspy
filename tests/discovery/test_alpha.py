@@ -5,66 +5,11 @@
 """
 
 
-import pytest, os, sys
-import pandas as pd
-import numpy as np
+import pytest, os
 
 from podspy.discovery import alpha
-from podspy.structure import CausalMatrix, FootprintMatrix
 from podspy.petrinet.nets import *
 from podspy.petrinet import visualize as vis
-
-
-@pytest.fixture()
-def simple_causal_matrix():
-    # causal matrix
-    mat = [
-        (0, 0, 83, 0, 0),   # a row
-        (0, 0, 64, 0, 0),   # b row
-        (0, 0, 0, 87, 60),  # c row
-        (0, 0, 0, 0, 0),    # d row
-        (0, 0, 0, 0, 0)
-    ]
-
-    mat = np.array(mat)
-    activity_list = ['a', 'b', 'c', 'd', 'e']
-    df = pd.DataFrame(mat, index=activity_list, columns=activity_list)
-    cmat = CausalMatrix(activity_list, df)
-
-    return cmat
-
-
-class TestFootprintMatrix:
-    def test_build_from_causal_matrix(self, simple_causal_matrix):
-        print(simple_causal_matrix)
-
-        footprint = FootprintMatrix.build_from_causal_matrix(simple_causal_matrix)
-
-        assert isinstance(footprint, FootprintMatrix)
-
-        # expected footprint matrix
-        # [
-        #     (#, #, ->, #, #)
-        #     (#, #, ->, #, #)
-        #     (<-, <-, #, ->, ->)
-        #     (#, #, <-, #, #)
-        #     (#, #, <-, #, #)
-        # ]
-
-        w = FootprintMatrix.NEVER_FOLLOW
-        x = FootprintMatrix.DIRECT_RIGHT
-        y = FootprintMatrix.DIRECT_LEFT
-        z = FootprintMatrix.PARALLEL
-
-        expected = [
-            (w, w, x, w, w),
-            (w, w, x, w, w),
-            (y, y, w, x, x),
-            (w, w, y, w, w),
-            (w, w, y, w, w)
-        ]
-
-        assert (footprint.matrix.values == expected).all()
 
 
 class TestAlphaMiner:
