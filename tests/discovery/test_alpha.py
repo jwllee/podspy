@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 from podspy.discovery import alpha
-from podspy.structure import CausalMatrix
+from podspy.structure import CausalMatrix, FootprintMatrix
 from podspy.petrinet.nets import *
 from podspy.petrinet import visualize as vis
 
@@ -38,9 +38,9 @@ class TestFootprintMatrix:
     def test_build_from_causal_matrix(self, simple_causal_matrix):
         print(simple_causal_matrix)
 
-        footprint = alpha.FootprintMatrix.build_from_causal_matrix(simple_causal_matrix)
+        footprint = FootprintMatrix.build_from_causal_matrix(simple_causal_matrix)
 
-        assert isinstance(footprint, alpha.FootprintMatrix)
+        assert isinstance(footprint, FootprintMatrix)
 
         # expected footprint matrix
         # [
@@ -51,10 +51,10 @@ class TestFootprintMatrix:
         #     (#, #, <-, #, #)
         # ]
 
-        w = alpha.FootprintMatrix.NEVER_FOLLOW
-        x = alpha.FootprintMatrix.DIRECT_RIGHT
-        y = alpha.FootprintMatrix.DIRECT_LEFT
-        z = alpha.FootprintMatrix.PARALLEL
+        w = FootprintMatrix.NEVER_FOLLOW
+        x = FootprintMatrix.DIRECT_RIGHT
+        y = FootprintMatrix.DIRECT_LEFT
+        z = FootprintMatrix.PARALLEL
 
         expected = [
             (w, w, x, w, w),
