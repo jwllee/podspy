@@ -66,7 +66,7 @@ class CausalMatrix:
         counts.columns = [cnst.ACTIVITY, 'shifted', 'count']
 
         zeros = np.zeros((len(activity_list), len(activity_list)))
-        mat = pd.DataFrame(zeros, index=activity_list, columns=activity_list)
+        mat = pd.DataFrame(zeros)
 
         for activity in counts['shifted'].unique():
             cols = counts.loc[counts['shifted'] == activity, cnst.ACTIVITY].values
