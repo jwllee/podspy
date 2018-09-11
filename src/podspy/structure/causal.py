@@ -66,7 +66,7 @@ class CausalMatrix:
         counts.columns = [cnst.ACTIVITY, 'shifted', 'count']
 
         zeros = np.zeros((len(activity_list), len(activity_list)))
-        mat = pd.DataFrame(zeros)
+        mat = pd.DataFrame(zeros, columns=activity_list, index=activity_list)
 
         for activity in counts['shifted'].unique():
             cols = counts.loc[counts['shifted'] == activity, cnst.ACTIVITY].values
@@ -76,5 +76,8 @@ class CausalMatrix:
 
         logger.debug('\n{}'.format(counts))
         logger.debug('\n{}'.format(mat))
+
+        mat.reset_index(drop=True, inplace=True)
+        mat.columns = list(range(len(activity_list)))
 
         return CausalMatrix(activity_list, mat)
