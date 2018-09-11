@@ -5,12 +5,14 @@
 """
 
 
-import pytest
+import pytest, os, sys
 import pandas as pd
 import numpy as np
 
 from podspy.discovery import alpha
 from podspy.structure import CausalMatrix
+from podspy.petrinet.nets import *
+from podspy.petrinet import visualize as vis
 
 
 @pytest.fixture()
@@ -68,3 +70,9 @@ class TestFootprintMatrix:
 class TestAlphaMiner:
     def test_alpha_simple_causal_matrix(self, simple_causal_matrix):
         net = alpha.discover(simple_causal_matrix)
+
+        assert isinstance(net, AcceptingPetrinet)
+
+        net_fp = os.path.join('.', 'tests', 'alpha.png')
+        G = vis.net2dot(net.net)
+        # G.draw(net_fp)
