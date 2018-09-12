@@ -7,8 +7,6 @@
 
 __name__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
-__all__ = [
-]
 
 
 import pandas as pd
@@ -23,43 +21,6 @@ from podspy.structure import FootprintMatrix
 logger = logging.getLogger(__file__)
 
 
-class CausalPair:
-    def __init__(self, A=list(), B=list()):
-        self.A = A
-        self.B = B
-
-    def add_to_A(self, x):
-        self.A += [x]
-        self.A = sorted(self.A)
-
-    def add_to_B(self, x):
-        self.B += [x]
-        self.B = sorted(self.B)
-
-    def is_superset(self, cp):
-        assert isinstance(cp, CausalPair), '{} not a causal pair'.format(cp)
-        superset = True
-        for item in cp.A:
-            if item not in self.A:
-                # cannot be a superset of cp
-                superset = False
-                return superset
-
-        for item in cp.B:
-            if item not in self.B:
-                superset = False
-                return superset
-
-        return superset
-
-    def __repr__(self):
-        return '{}({}, {})'.format(self.__class__.__name__,
-                                   self.A, self.B)
-
-    def __str__(self):
-        return '{} -> {}'.format(self.A, self.B)
-
-
 def powerset(iterable):
     """Compute the powerset of a collection.
     Taken from https://docs.python.org/2/library/itertools.html#recipes.
@@ -72,29 +33,6 @@ def powerset(iterable):
     return itls.chain.from_iterable(itls.combinations(s, r) for r in range(len(s)+1))
 
 
-def add_to_causal_pair_list(pair, _list):
-    i = 0
-
-    while i < len(_list):
-        p0 = _list[i]
-
-        if p0.is_superset(pair):
-            # no need to further check since pair is contained within one of the causal pairs
-            break
-
-        elif pair.is_superset(p0):
-            # swap them
-            _list[i] = p0
-            # no need to further check since we assume p0 is different to the remaining
-            break
-
-        i += 1
-
-    if i == len(_list):
-        # got to the end without breaking, it is a new causal pair
-        _list.append(pair)
-
-
 def discover(causal_mat):
     footprint = FootprintMatrix.build_from_causal_matrix(causal_mat)
     causal_pairs = list()
@@ -103,19 +41,22 @@ def discover(causal_mat):
     logger.debug('Footprint: \n{}'.format(footprint))
 
     target_df = footprint.matrix == FootprintMatrix.DIRECT_RIGHT
-    never_df = (footprint.matrix == FootprintMatrix.NEVER_FOLLOW)
+    never_df = footprint.matrix == FootprintMatrix.NEVER_FOLLOW
 
     assert isinstance(never_df, pd.DataFrame)
     assert isinstance(target_df, pd.DataFrame)
 
     for i in range(len(footprint.activity_list)):
-        direct_into = footprint.matrix[i] == FootprintMatrix.DIRECT_RIGHT
-        source_activities = footprint.matrix.loc[direct_into, i].index.values
+        # get all the activities that "causes" activity i
+        direct_into_i = target_df.iloc[:, i]
+        source_activities = footprint.matrix.loc[direct_into_i, i].index.values
 
         if len(source_activities) == 0:
             continue
 
         logger.debug('Source activity candidates: {}'.format(source_activities))
+
+        # potentially need to check every combination of source activity sets
         A_list = powerset(source_activities)
 
         for A in A_list:
@@ -141,29 +82,47 @@ def discover(causal_mat):
             # get the common target activities including activity i
             # this means that it needs -> in all A rows
             select_B = target_df_i.all(axis=0)
+
             # logger.debug('Select B: {}'.format(select_B))
+
             B = itls.compress(select_B.index.values, select_B)
-            B = list(B)
+
+            A = set(A)
+            B = set(B)
 
             logger.debug('Target activities: {}'.format(B))
 
-            if len(A) > 0 and len(B) > 0:
-                candidate_cpair = CausalPair(list(A), B)
+            # the candidate causal set pairs have to fulfill two requirements
+            non_empty = len(A) > 0 and len(B) > 0
+            equal = A.issubset(B) and B.issubset(A)
+
+            if non_empty and not equal:
+                candidate_cpair = (A, B)
                 logger.debug('Adding causal pair: {}'.format(candidate_cpair))
                 causal_pairs.append(candidate_cpair)
 
     # remove redundant causal pairs
     maximal_cpairs = list()
+
+    def contain_pair(p0, p1):
+        """Check if a causal pair is contained within another.
+
+        :param p0: parent pair
+        :param p1: child pair
+        :return: whether if p0 contains p1
+        """
+        return p1[0].issubset(p0[0]) and p1[1].issubset(p0[1])
+
     while len(causal_pairs) > 0:
-        candidate_cpair = causal_pairs.pop(0)
+        candidate = causal_pairs.pop(0)
         is_maximal = True
 
         to_remove = list()
         for i in range(len(causal_pairs)):
             cp = causal_pairs[i]
-            if candidate_cpair.is_superset(cp):
+            if contain_pair(candidate, cp):
                 to_remove.append(i)
-            elif cp.is_superset(candidate_cpair):
+            elif contain_pair(cp, candidate):
                 is_maximal = False
                 break
 
@@ -171,7 +130,7 @@ def discover(causal_mat):
             causal_pairs.pop(i)
 
         if is_maximal:
-            maximal_cpairs.append(candidate_cpair)
+            maximal_cpairs.append(candidate)
 
         if len(causal_pairs) == 1:
             # this has to be maximal
@@ -185,11 +144,15 @@ def discover(causal_mat):
     pn = PetrinetFactory.new_petrinet(label)
 
     # source and sink transitions
-    zero_mat = causal_mat.matrix == 0
-    select_src_trans = zero_mat.all(axis=0)
-    select_sink_trans = zero_mat.all(axis=1)
-    src_act_list = list(itls.compress(footprint.activity_list, select_src_trans))
-    sink_act_list = list(itls.compress(footprint.activity_list, select_sink_trans))
+    # an activity is a source activity if there is no causal relations into the activity
+    # this means the corresponding column's rows are all 0, ~ is negation
+    select_src_acts = ~causal_mat.matrix.any(axis=0)
+    # an activity is a target activity if there is no causal relations out of the activity
+    # this means the corresponding row's columns are all 0
+    select_sink_acts = ~causal_mat.matrix.any(axis=1)
+
+    src_act_list = list(itls.compress(footprint.activity_list, select_src_acts))
+    sink_act_list = list(itls.compress(footprint.activity_list, select_sink_acts))
 
     logger.debug('Source transitions: {}'.format(src_act_list))
     logger.debug('Sink transitions: {}'.format(sink_act_list))
@@ -202,37 +165,35 @@ def discover(causal_mat):
         trans_refs[activity] = trans
 
     # add source and sink
-    place_refs = []
-    place_refs.append(pn.add_place('i'))
-    place_refs.append(pn.add_place('o'))
+    src_place = pn.add_place('i')
+    sink_place = pn.add_place('o')
 
     # add arcs between source and sink places and transitions
     for src_act in src_act_list:
         src_trans = trans_refs[src_act]
-        pn.add_arc(place_refs[0], src_trans)
+        pn.add_arc(src_place, src_trans)
 
     for sink_act in sink_act_list:
         sink_trans = trans_refs[sink_act]
-        pn.add_arc(sink_trans, place_refs[1])
+        pn.add_arc(sink_trans, sink_place)
 
     for i in range(len(maximal_cpairs)):
-        cpair = maximal_cpairs[i]
+        A, B = maximal_cpairs[i]
         place = pn.add_place('p{}'.format(i))
-        place_refs.append(place)
 
         # add corresponding arcs
-        for a in cpair.A:
+        for a in A:
             activity = footprint.activity_list[a]
             trans = trans_refs[activity]
             pn.add_arc(trans, place)
 
-        for b in cpair.B:
+        for b in B:
             activity = footprint.activity_list[b]
             trans = trans_refs[activity]
             pn.add_arc(place, trans)
 
-    init_marking = Marking([place_refs[0]])
-    final_marking = Marking([place_refs[1]])
+    init_marking = Marking([src_place])
+    final_marking = Marking([sink_place])
     apn = PetrinetFactory.new_accepting_petrinet(pn, init_marking, final_marking)
 
     return apn
