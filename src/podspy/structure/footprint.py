@@ -44,7 +44,7 @@ class FootprintMatrix:
 
         nb_acts = len(cmat.activity_list)
         mat = np.zeros(shape=(nb_acts, nb_acts))
-        mat = pd.DataFrame(mat)
+        mat = pd.DataFrame(mat, dtype=np.int)
 
         # case 1: (a, b) = 0 and (b, a) = 0, then #
         # case 2: (a, b) = 0 and (b, a) > 0, then <-
