@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """This is an implementation of the classic alpha mining algorithm [1]_.
 
@@ -9,7 +9,7 @@
 """
 
 
-__name__ = "Wai Lam Jonathan Lee"
+__author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 
 
