@@ -5,7 +5,15 @@
 """
 
 
-from podspy.structure import FootprintMatrix
+import numpy as np
+from podspy.structure import FootprintMatrix, CausalMatrix
+
+
+# some renaming for convenience
+n = FootprintMatrix.NEVER_FOLLOW
+r = FootprintMatrix.DIRECT_RIGHT
+l = FootprintMatrix.DIRECT_LEFT
+p = FootprintMatrix.PARALLEL
 
 
 class TestFootprintMatrix:
@@ -25,17 +33,59 @@ class TestFootprintMatrix:
         #     (#, #, <-, #, #)
         # ]
 
-        w = FootprintMatrix.NEVER_FOLLOW
-        x = FootprintMatrix.DIRECT_RIGHT
-        y = FootprintMatrix.DIRECT_LEFT
-        z = FootprintMatrix.PARALLEL
+        expected = [
+            (n, n, r, n, n),
+            (n, n, r, n, n),
+            (l, l, n, r, r),
+            (n, n, l, n, n),
+            (n, n, l, n, n)
+        ]
+        expected = np.asarray(expected)
+
+        assert (footprint.matrix.values == expected).all()
+
+    def test_build_one_loop_log_table(self, one_loop_log_table):
+        cmat = CausalMatrix.build_from_logtable(one_loop_log_table)
+        footprint = FootprintMatrix.build_from_causal_matrix(cmat)
+
+        assert isinstance(footprint, FootprintMatrix)
+
+        # expected footprint matrix
+        # [
+        #   (||, <, >),     # a row
+        #   (>,  #, #),     # x row
+        #   (<,  #, #)      # y row
+        # ]
 
         expected = [
-            (w, w, x, w, w),
-            (w, w, x, w, w),
-            (y, y, w, x, x),
-            (w, w, y, w, w),
-            (w, w, y, w, w)
+            (p, l, r),
+            (r, n, n),
+            (l, n, n)
         ]
+        expected = np.asarray(expected)
+
+        assert (footprint.matrix.values == expected).all()
+
+    def test_build_two_loop_log_table(self, two_loop_log_table):
+        cmat = CausalMatrix.build_from_logtable(two_loop_log_table)
+        footprint = FootprintMatrix.build_from_causal_matrix(cmat)
+
+        assert isinstance(footprint, FootprintMatrix)
+
+        # expected footprint matrix
+        # [
+        #   (#, ||, <, >),  # a row
+        #   (||, #, #, >),  # b row
+        #   (>,  #, #, #),  # x row
+        #   (<,  <, #, #)   # y row
+        # ]
+
+        expected = [
+            (n, p, l, r),
+            (p, n, n, r),
+            (r, n, n, n),
+            (l, l, n, n)
+        ]
+        expected = np.asarray(expected)
 
         assert (footprint.matrix.values == expected).all()
