@@ -33,7 +33,7 @@ def powerset(iterable):
     return itls.chain.from_iterable(itls.combinations(s, r) for r in range(len(s)+1))
 
 
-def discover(causal_mat):
+def apply(causal_mat):
     footprint = FootprintMatrix.build_from_causal_matrix(causal_mat)
     causal_pairs = list()
 
