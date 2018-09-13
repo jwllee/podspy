@@ -189,7 +189,12 @@ def apply(causal_mat):
 
     for i in range(len(maximal_cpairs)):
         A, B = maximal_cpairs[i]
-        place = pn.add_place('p{}'.format(i))
+        A_sorted = sorted([footprint.activity_list[i] for i in A])
+        B_sorted = sorted([footprint.activity_list[i] for i in B])
+        A_str = ', '.join(A_sorted)
+        B_str = ', '.join(B_sorted)
+        place_label = '({{{}}}, {{{}}})'.format(A_str, B_str)
+        place = pn.add_place(place_label)
 
         # add corresponding arcs
         for a in A:
