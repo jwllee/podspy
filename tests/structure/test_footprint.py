@@ -11,8 +11,8 @@ from podspy.structure import FootprintMatrix, CausalMatrix
 
 # some renaming for convenience
 n = FootprintMatrix.NEVER_FOLLOW
-r = FootprintMatrix.DIRECT_RIGHT
-l = FootprintMatrix.DIRECT_LEFT
+r = FootprintMatrix.CAUSAL_RIGHT
+l = FootprintMatrix.CAUSAL_LEFT
 p = FootprintMatrix.PARALLEL
 
 

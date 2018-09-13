@@ -50,7 +50,7 @@ def apply(causal_mat):
     logger.debug('Causal matrix: \n{}'.format(causal_mat))
     logger.debug('Footprint: \n{}'.format(footprint))
 
-    target_df = footprint.matrix == FootprintMatrix.DIRECT_RIGHT
+    target_df = footprint.matrix == FootprintMatrix.CAUSAL_RIGHT
     never_df = footprint.matrix == FootprintMatrix.NEVER_FOLLOW
 
     assert isinstance(never_df, pd.DataFrame)

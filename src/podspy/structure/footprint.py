@@ -23,8 +23,8 @@ logger = logging.getLogger(__file__)
 class FootprintMatrix:
     # there are 4 types of relations
     NEVER_FOLLOW = 0
-    DIRECT_RIGHT = 1
-    DIRECT_LEFT = 2
+    CAUSAL_RIGHT = 1
+    CAUSAL_LEFT = 2
     PARALLEL = 3
 
     def __init__(self, activity_list=list(), matrix=pd.DataFrame()):
@@ -60,14 +60,14 @@ class FootprintMatrix:
 
                     # case 2
                     elif cmat.matrix.iloc[j, i] > 0:
-                        mat.iloc[i, j] = FootprintMatrix.DIRECT_LEFT
-                        mat.iloc[j, i] = FootprintMatrix.DIRECT_RIGHT
+                        mat.iloc[i, j] = FootprintMatrix.CAUSAL_LEFT
+                        mat.iloc[j, i] = FootprintMatrix.CAUSAL_RIGHT
 
                 elif cmat.matrix.iloc[i, j] > 0:
                     # case 3
                     if cmat.matrix.iloc[j, i] == 0:
-                        mat.iloc[i, j] = FootprintMatrix.DIRECT_RIGHT
-                        mat.iloc[j, i] = FootprintMatrix.DIRECT_LEFT
+                        mat.iloc[i, j] = FootprintMatrix.CAUSAL_RIGHT
+                        mat.iloc[j, i] = FootprintMatrix.CAUSAL_LEFT
 
                     # case 4
                     elif cmat.matrix.iloc[j, i] > 0:
