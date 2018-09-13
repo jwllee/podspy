@@ -51,7 +51,7 @@ class FootprintMatrix:
         # case 3: (a, b) > 0 and (b, a) = 0, then ->
         # case 4: (a, b) > 0 and (b, a) > 0, then ||
         for i in range(nb_acts):
-            for j in range(i + 1, nb_acts):
+            for j in range(i, nb_acts):
                 logger.debug('Checking cell {}, {}'.format(i, j))
                 if cmat.matrix.iloc[i, j] == 0:
                     # case 1
