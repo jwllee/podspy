@@ -48,29 +48,31 @@ class CausalMatrix:
             activity_list = sorted(activity_list)
 
         def get_causal_mat(df):
-            events = df[cnst.ACTIVITY].values
-            shifted = [np.nan] + list(events)
-            shifted_df = pd.DataFrame({'shifted': shifted})
+            to_join = ([np.nan], df[cnst.ACTIVITY].values)
+            shifted_down = np.concatenate(to_join)
+            shifted_df = pd.DataFrame({'shifted_down': shifted_down})
             # need to reset the index of df so that concatenation align
             df = pd.concat([df.reset_index(drop=True), shifted_df], axis=1)
-            df = df[[cnst.CASEID, 'shifted', cnst.ACTIVITY]]
+            df = df[[cnst.CASEID, 'shifted_down', cnst.ACTIVITY]]
             return df
 
         grouped = logtable.event_df.groupby(cnst.CASEID, as_index=False)
         grouped = grouped.apply(get_causal_mat)
         # exclude any NaN rows
-        grouped = grouped.dropna(axis=0, subset=[cnst.ACTIVITY, 'shifted'])
+        grouped = grouped.dropna(axis=0, subset=[cnst.ACTIVITY, 'shifted_down'])
 
-        grouped = grouped.groupby([cnst.ACTIVITY, 'shifted'], as_index=False)
+        grouped = grouped.groupby(['shifted_down', cnst.ACTIVITY], as_index=False)
         counts = grouped.agg('count')
-        counts.columns = [cnst.ACTIVITY, 'shifted', 'count']
+        # give the counts column a good column name
+        counts = counts.rename(columns={cnst.CASEID: 'count'}, index=str)
+        counts = counts[['shifted_down', cnst.ACTIVITY, 'count']]
 
         zeros = np.zeros((len(activity_list), len(activity_list)))
-        mat = pd.DataFrame(zeros, columns=activity_list, index=activity_list)
+        mat = pd.DataFrame(zeros, columns=activity_list, index=activity_list, dtype=np.int)
 
-        for activity in counts['shifted'].unique():
-            cols = counts.loc[counts['shifted'] == activity, cnst.ACTIVITY].values
-            vals = counts.loc[counts['shifted'] == activity, 'count'].values
+        for activity in logtable.event_df[cnst.ACTIVITY].unique():
+            cols = counts.loc[counts['shifted_down'] == activity, cnst.ACTIVITY].values
+            vals = counts.loc[counts['shifted_down'] == activity, 'count'].values
             logger.debug('Setting columns {} related to "{}" row with values {}'.format(cols, activity, vals))
             mat.loc[activity, cols] = vals
 
