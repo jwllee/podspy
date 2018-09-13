@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""This is the alpha discovery algorithm module.
+"""This is an implementation of the classic alpha mining algorithm [1]_.
+
+
+.. [1] Van der Aalst, Wil, Ton Weijters, and Laura Maruster. "Workflow mining: Discovering
+  process models from event logs." IEEE Transactions on Knowledge & Data Engineering 9 (2004): 1128-1142.
 
 """
 
@@ -34,6 +38,12 @@ def powerset(iterable):
 
 
 def apply(causal_mat):
+    """Applies the alpha mining algorithm to a causal matrix.
+
+    :param causal_mat: causal matrix describing the causal relations between activities
+    :return: the discovered accepting petri net
+    """
+
     footprint = FootprintMatrix.build_from_causal_matrix(causal_mat)
     causal_pairs = list()
 
