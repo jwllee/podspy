@@ -208,7 +208,7 @@ def apply(causal_mat):
             pn.add_arc(place, trans)
 
     init_marking = Marking([src_place])
-    final_marking = Marking([sink_place])
-    apn = PetrinetFactory.new_accepting_petrinet(pn, init_marking, final_marking)
+    final_markings= {Marking([sink_place])}
+    apn = PetrinetFactory.new_accepting_petrinet(pn, init_marking, final_markings)
 
     return apn
