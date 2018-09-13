@@ -67,6 +67,14 @@ def apply(causal_mat):
         logger.debug('Source activity candidates: {}'.format(source_activities))
 
         # potentially need to check every combination of source activity sets
+        # Comment:
+        # ---
+        # This part can be improved by looking at the larger subsets A first, and
+        # then when looking at the smaller subnets A', if the target B' is subset of
+        # target B, you won't have to add to causal_pairs. This means that less
+        # filtering for the maximal causal pairs can be done. There's still filtering
+        # because you can have the same (A, B) pairs from different activity loops.
+        # ---
         A_list = powerset(source_activities)
 
         for A in A_list:
