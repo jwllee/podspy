@@ -48,12 +48,16 @@ def add_trans_to_dotgraph(t, node_id, G):
         'shape': 'square',
     }
 
+    if t.is_invisible:
+        attrs['color'] = 'black'
+        attrs['style'] = 'filled'
+
     G.add_node(node_id, **attrs)
     n = G.get_node(node_id)
 
-    if t.is_invisible:
-        n.attr['color'] = 'black'
-        n.attr['style'] = 'filled'
+    # if t.is_invisible:
+    #     n.attr['color'] = 'black'
+    #     n.attr['style'] = 'filled'
 
     return n
 

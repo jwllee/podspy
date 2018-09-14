@@ -8,6 +8,7 @@ This module tests the visualize module.
 
 import os, logging, pytest
 from podspy.petrinet import visualize as vis, io
+from podspy import petrinet
 import pygraphviz as pgv
 
 
@@ -19,24 +20,27 @@ __email__ = "walee@uc.cl"
 
 
 def test_ptnet2dot():
-    net_fp = os.path.join('.', 'tests', 'testdata', 'net1.pnml')
+    net_fp = os.path.join('.', 'tests', 'testdata', 'simple.pnml')
     with open(net_fp, 'r') as f:
         pnml = io.import_pnml(f)
-    ptnet, marking, final_markings = io.pnml2pn(pnml)
+    net, marking, final_markings = io.pnml2pn(pnml)
+    apn = petrinet.AcceptingPetrinet(net, marking, final_markings)
 
-    G = vis.net2dot(ptnet, marking, layout='dot')
+    G = petrinet.to_agraph(apn, marking=marking)
 
     # uncomment to draw out the figure
-    # G.draw('./simple-with-marking.png')
+    G.draw('./simple-with-marking.png', prog='dot')
 
     assert isinstance(G, pgv.AGraph)
 
-    G = vis.net2dot(ptnet, layout='dot')
+    G = petrinet.to_agraph(apn)
+
+    # G = vis.net2dot(net, layout='dot')
     # same as above
     # with open('./dotfile', 'w') as f:
     #     print(G, file=f)
 
-    G.draw('./simple.png')
+    G.draw('./simple.png', prog='dot')
 
     assert isinstance(G, pgv.AGraph)
 
