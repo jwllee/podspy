@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-"""This is the example module.
+"""This is the log table module.
 
-This module does stuff.
+This module contains the LogTable class.
 """
 
 __author__ = "Wai Lam Jonathan Lee"
@@ -70,26 +70,20 @@ class LogTable:
                  global_trace_attributes=None, global_event_attributes=None,
                  classifiers=None, extensions=None, variant_sep=VARIANT_SEP,
                  variant_id=VARIANT_ID):
-        ''' Container class of event data in tabular format.
+        """Container class of event data in dataframe format.
 
-        Parameters
-        ----------
-        trace_df: DataFrame
-            DataFrame containing information of each trace in event log
-        event_df: DataFrame
-            DataFrame containing information of each event in event log
-        attributes: dict
-            Dictionary containing attributes on the log level
-        global_trace_attributes: dict
-            Dictionary containing global trace attributes
-        global_event_attributes: dict
-            Dictionary containing global event attributes
-        classifiers: dict
-            Classifiers to give identities to event corresponding to a sub-list of the global event attributes
-        extensions: dict
-            Extensions to give semantics to attributes, e.g., the concept extension. Each extension is a tuple
-            consisting of (name, prefix, uri)
-        '''
+        :param trace_df: dataframe containing information of each trace in event log
+        :param event_df: dataframe containing information of each event in event log
+        :param attributes: dictionary containing attributes on the log level
+        :param global_trace_attributes: dictionary containing global trace attributes
+        :param global_event_attributes: dictionary containing global event attributes
+        :param classifiers: classifiers to give identities to event corresponding to a sub-list
+            of the global event attributes
+        :param extensions: extensions to give semantics to attributes, e.g., the concept extension.
+            Each extension consisting of (name, prefix, uri)
+        :param variant_sep: separator of events for variant strings
+        :param variant_id: variant id column name
+        """
         self.trace_df = trace_df if trace_df is not None else pd.DataFrame()
         self.event_df = event_df if event_df is not None else pd.DataFrame()
         self.attributes = attributes if attributes is not None else dict()
@@ -104,6 +98,12 @@ class LogTable:
         self.variant_id = variant_id
 
     def get_event_identity_list(self, clf_name=None, sort=True):
+        """Get the unique event identities using given classifier
+
+        :param clf_name: classifier name
+        :param sort: whether to sort the event identities
+        :return: a list of event identities
+        """
         if clf_name is None or clf_name not in self.classifiers:
             keys = list(self.classifiers.keys())
             if len(keys) > 0:
@@ -137,15 +137,10 @@ class LogTable:
         return id_list
 
     def get_trace_variants(self):
-        ''' Allocates case ids to trace variants by their activity column
+        """Allocate case ids to trace variants by their activity column
 
-        Returns
-        -------
-        pd.DataFrame
-            Consists two columns: caseid and variant
-
-        '''
-        # check if there are caseid and activity columns
+        :return: dataframe consisting of caseid and variant columns
+        """
         if const.ACTIVITY not in self.event_df.columns:
             raise ValueError('Activity column not defined in event df!')
         if const.CASEID not in self.event_df.columns:
