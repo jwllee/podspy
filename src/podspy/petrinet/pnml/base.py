@@ -9,8 +9,6 @@ This module contains base pnml classes.
 from abc import ABC, abstractmethod
 from lxml import etree
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'PnmlBaseFactory',
     'PnmlElement',

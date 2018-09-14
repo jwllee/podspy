@@ -17,10 +17,6 @@ from podspy.petrinet import semantics as smc
 from podspy.petrinet import nets as nts
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 logger = logging.getLogger(__file__)
 
 

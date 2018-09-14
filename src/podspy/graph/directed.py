@@ -9,10 +9,6 @@ from abc import ABC, abstractmethod
 from podspy.graph import base
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 class AbstractDirectedGraphEdge(base.AbstractGraphEdge):
     @abstractmethod
     def __init__(self, src, target, *args, **kwargs):

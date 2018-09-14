@@ -11,10 +11,6 @@ from abc import ABC, abstractmethod
 import uuid, logging
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 logger = logging.getLogger(__file__)
 
 

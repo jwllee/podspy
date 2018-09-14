@@ -13,9 +13,6 @@ from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.semantics import *
 from podspy.petrinet import factory as fty, io
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 
 logger = logging.getLogger('tests')
 

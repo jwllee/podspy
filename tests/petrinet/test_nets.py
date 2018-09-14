@@ -15,10 +15,6 @@ import numpy as np
 from pandas.testing import assert_frame_equal
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 class TestPetrinet:
     def test_get_transition_relation_dfs(self):
         # make net

@@ -10,8 +10,6 @@ import logging
 from podspy.structure.causal import CausalMatrix
 
 
-__name__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
    'FootprintMatrix'
 ]

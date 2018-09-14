@@ -10,10 +10,6 @@ from podspy.graph.directed import AbstractDirectedGraphEdge
 from podspy.petrinet.elements import *
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 class TestAbstractDirectedGraphEdge:
     class MockAbstractDirectedGraphEdge(AbstractDirectedGraphEdge):
         def __init__(self, src, target, *args, **kwargs):

@@ -14,10 +14,6 @@ from urllib.request import urlparse
 import pandas as pd
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 logger = logging.getLogger(__file__)
 
 

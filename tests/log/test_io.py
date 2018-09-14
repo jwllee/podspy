@@ -16,10 +16,6 @@ from podspy.log import constants, io
 from podspy.log import table as tble
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 @pytest.fixture(ids=lambda s: str(s[1]), params=[
     # event 0
     ('<event>'

@@ -13,8 +13,6 @@ from sortedcontainers import SortedDict
 import logging
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'SortedMultiSet',
     'HashMultiSet'

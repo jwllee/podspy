@@ -16,9 +16,6 @@ from opyenxes.factory.XFactory import XFactory
 
 from .constants import *
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 
 def read_event_log_file(log_filepath):
     if not os.path.isfile(log_filepath):

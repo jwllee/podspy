@@ -24,8 +24,6 @@ from lxml import etree
 logger = logging.getLogger(__name__)
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'Pnml',
     'PnmlInitialMarking',

@@ -5,9 +5,9 @@
 This module does stuff.
 """
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-__all__ = ['Singleton']
+__all__ = [
+    'Singleton'
+]
 
 
 class Singleton(object):

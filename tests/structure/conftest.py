@@ -4,9 +4,6 @@
 
 """
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 
 import pytest
 import pandas as pd

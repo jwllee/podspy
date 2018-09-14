@@ -5,9 +5,6 @@
 This module contains constant values.
 """
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 
 DISCRETE = 'DISCRETE'
 LITERAL = 'LITERAL'

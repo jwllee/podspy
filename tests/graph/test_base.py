@@ -9,11 +9,6 @@ This module tests classes in the base module.
 from podspy.graph.base import AbstractGraphEdge, AbstractGraph
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
-
 class TestAbstractGraphEdge:
 
     class MockAbstractGraphEdge(AbstractGraphEdge):

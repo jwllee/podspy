@@ -14,8 +14,6 @@ from podspy.utils.multiset import SortedMultiSet
 from podspy.petrinet.elements import *
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'Marking',
     'PetrinetExecutionInformation',

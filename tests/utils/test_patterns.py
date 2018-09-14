@@ -7,9 +7,6 @@ This module does stuff.
 
 from podspy.utils.patterns import Singleton
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 
 class MockSingleton(Singleton):
     def __init__(self, var='hello world'):

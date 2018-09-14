@@ -14,10 +14,6 @@ import numpy as np
 from pandas.testing import assert_series_equal
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 def test_make_marking():
     graph = 'g0'
     p0 = Place(graph, 'p0')

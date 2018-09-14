@@ -27,8 +27,6 @@ import numpy as np
 logger = logging.getLogger(__file__)
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = 'walee@uc.cl'
 __all__ = [
     'LogTableFactory'
 ]

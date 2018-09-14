@@ -19,10 +19,6 @@ EXTENSION_MANAGER = XExtensionManager()
 CONCEPT_EXTENSION = EXTENSION_MANAGER.get_by_name('Concept')
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 def test_simple():
     assert 1 + 1 == 2
 

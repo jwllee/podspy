@@ -12,10 +12,6 @@ from podspy.utils import attributes as attrib
 from collections import namedtuple
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 class MockPnmlAnnotation(emt.PnmlAnnotation):
     TAG = 'mock'
 

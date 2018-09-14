@@ -26,10 +26,6 @@ LIFECYCLE_EXTENSION = EXTENSION_MANAGER.get_by_name('Lifecycle')
 ORG_EXTENSION = EXTENSION_MANAGER.get_by_name('Organizational')
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 LOG_ATTRIBUTES = [
     (XAttributeType.LITERAL.name, 'concept:name', None),
     (XAttributeType.CONTINUOUS.name, 'total_time', None)

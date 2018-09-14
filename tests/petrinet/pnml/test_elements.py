@@ -9,10 +9,6 @@ This module tests classes in pnml element module.
 from podspy.petrinet.pnml.elements import *
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 class TestPnml:
 
     class MockPnmlNet:

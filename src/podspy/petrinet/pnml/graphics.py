@@ -12,8 +12,6 @@ from enum import Enum
 from lxml import etree
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'PnmlAnnotationGraphics',
     'PnmlArcGraphics',

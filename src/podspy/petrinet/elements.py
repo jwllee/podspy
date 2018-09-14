@@ -17,8 +17,6 @@ from podspy.utils import shapes, colors
 logger = logging.getLogger(__file__)
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'Arc',
     'InhibitorArc',

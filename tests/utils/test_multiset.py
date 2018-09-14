@@ -10,10 +10,6 @@ import pytest
 from podspy.utils.multiset import *
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 @pytest.fixture(params=[
     [], # empty item list
     ['a', 'b', 'c'],

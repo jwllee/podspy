@@ -9,10 +9,6 @@
 """
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 import pandas as pd
 import logging
 import itertools as itls

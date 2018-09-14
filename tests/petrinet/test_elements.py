@@ -11,9 +11,6 @@ from podspy.petrinet.elements import *
 from podspy.petrinet.elements import PetrinetEdge
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
 def test_make_petrinet_node():
     # using a subclass of the abstract petrinet node class to test it
     graph = None

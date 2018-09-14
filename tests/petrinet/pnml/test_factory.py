@@ -15,10 +15,6 @@ from podspy.petrinet.pnml.extension import *
 from podspy.petrinet.pnml.graphics import *
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
-
-
 @pytest.fixture(params=[
     # base
     PnmlText,

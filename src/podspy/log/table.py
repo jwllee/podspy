@@ -5,8 +5,6 @@
 This module contains the LogTable class.
 """
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'LogTable'
 ]

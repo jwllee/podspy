@@ -9,8 +9,6 @@ from podspy.petrinet import nets as nt
 from podspy.petrinet import semantics as smc
 
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
 __all__ = [
     'PetrinetFactory'
 ]

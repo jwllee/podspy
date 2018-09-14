@@ -10,8 +10,7 @@ from podspy.petrinet.pnml.base import *
 from podspy.petrinet.semantics import Marking
 from lxml import etree
 
-__author__ = "Wai Lam Jonathan Lee"
-__email__ = "walee@uc.cl"
+
 __all__ = [
     'PnmlExtensionFactory',
     'PnmlFinalMarking',
