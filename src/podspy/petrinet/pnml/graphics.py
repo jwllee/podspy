@@ -69,10 +69,10 @@ class PnmlGraphicFactory:
     @staticmethod
     def ele2dimension(element, layout=None):
         dim = PnmlDimension()
-        # dimension can be either in node.map (from ProM)
+        # dimension can be either in node.attribs (from ProM)
         # or node.attr (from pygraphviz), we use ProM if possible
-        if atr.SIZE in element.map:
-            size = element.map[atr.SIZE]
+        if atr.SIZE in element.attribs:
+            size = element.attribs[atr.SIZE]
         else:
             width = lot.get_width(element, layout, atr.DEF_NODE_WIDTH)
             height = lot.get_width(element, layout, atr.DEF_NODE_HEIGHT)
@@ -87,8 +87,8 @@ class PnmlGraphicFactory:
 
     @staticmethod
     def ele2fill(element, layout=None):
-        if atr.FILLCOLOR in element.map:
-            color = element.map[atr.FILLCOLOR]
+        if atr.FILLCOLOR in element.attribs:
+            color = element.attribs[atr.FILLCOLOR]
             if color != '#000000': # no point adding color if it's just black
                 fill = PnmlFill()
                 fill.color = color
@@ -135,10 +135,10 @@ class PnmlGraphicFactory:
         # should be in node.attr (from pygraphviz)
         pos = lot.get_node_pos(element, layout, default=(atr.DEF_NODE_POS_X, atr.DEF_NODE_POS_Y))
 
-        # dimension can be either in node.map (from ProM)
+        # dimension can be either in node.attribs (from ProM)
         # or node.attr (from pygraphviz), we use ProM if possible
-        if atr.SIZE in element.map:
-            size = element.map[atr.SIZE]
+        if atr.SIZE in element.attribs:
+            size = element.attribs[atr.SIZE]
         else:
             width = lot.get_width(element, layout, default=atr.DEF_NODE_WIDTH)
             height = lot.get_height(element, layout, default=atr.DEF_NODE_HEIGHT)
@@ -262,7 +262,7 @@ class PnmlDimension(PnmlElement):
             luc, rbc = box
             # dimension in x and y
             dim = (rbc[0] - luc[0], rbc[1] - luc[1])
-            element.map[atr.SIZE] = dim
+            element.attribs[atr.SIZE] = dim
 
     def to_lxml(self):
         ele = etree.Element(PnmlDimension.TAG)
@@ -311,7 +311,7 @@ class PnmlFill(PnmlElement):
 
     def convert_to_net(self, element):
         if self.color:
-            element.map[atr.FILLCOLOR] = self.color
+            element.attribs[atr.FILLCOLOR] = self.color
 
     def to_lxml(self):
         ele = etree.Element(PnmlFill.TAG)
@@ -438,15 +438,15 @@ class PnmlLine(PnmlElement):
 
     def convert_to_net(self, element):
         if self.shape == Shape.SHAPE_LINE:
-            element.map[atr.STYLE] = 'orthogonal'
+            element.attribs[atr.STYLE] = 'orthogonal'
         else:
-            element.map[atr.STYLE] = 'spline'
+            element.attribs[atr.STYLE] = 'spline'
 
         if self.color:
             if isinstance(element, Arc):
                 element.attribs[atr.EDGECOLOR] = self.color
             else:
-                element.map[atr.STROKECOLOR] = self.color
+                element.attribs[atr.STROKECOLOR] = self.color
 
         if self.width:
             element.attribs[atr.LINEWIDTH] = self.width

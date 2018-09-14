@@ -281,7 +281,7 @@ class PnmlAnnotation(PnmlElement):
 
     def convert_to_net(self, element):
         if self.text:
-            element.map[attrib.LABEL] = self.text.text
+            element.attribs[attrib.LABEL] = self.text.text
 
         if self.graphics:
             self.graphics.convert_to_net(element)
@@ -588,7 +588,7 @@ class PnmlNode(PnmlBasicObject):
 
     def convert_to_net(self, **kwargs):
         node = kwargs['node']
-        node.map[attrib.SIZE] = (40, 40)
+        node.attribs[attrib.SIZE] = (40, 40)
         if self.graphics:
             self.graphics.convert_to_net(node)
 
