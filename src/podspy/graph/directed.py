@@ -53,8 +53,16 @@ class AbstractDirectedGraph(base.AbstractGraph):
         self.out_edge_map = dict()
 
     @abstractmethod
-    def get_nodes(self):
-        pass
+    def get_directed_edges(self, src=None, target=None):
+        """Get all edges directed from source nodes to target nodes
+
+        :param src: None, single node or node collection of source nodes. If None, then
+            it will be all nodes.
+        :param target: None, single node or node collection of target nodes. If None, then
+            it will be all nodes.
+        :return: edges
+        """
+        return self.get_edges()
 
     def check_add_edge(self, src, target):
         """Raises error if an edge with given source and target node cannot

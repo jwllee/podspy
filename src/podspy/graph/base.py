@@ -126,19 +126,44 @@ class AbstractGraph(AbstractGraphElement):
                 return item
         return None
 
-    def get_edges(self, src, target, collection):
-        """Gets edges with given source and target from collection.
+    def __iter__(self):
+        """Iterate over nodes
 
-        :param src: source node
-        :param target: target node
-        :param collection: collection of edges
-        :return: set of edges
+        :return: an iterator over nodes
         """
-        edges = set()
-        for e in collection:
-            if e.src == src and e.target == target:
-                edges.add(e)
-        return edges
+        return iter(self.get_nodes())
+
+    def __contains__(self, n):
+        """Returns True if graph has node n, False otherwise.
+
+        :param n: node
+        :return: whether if node n is in graph
+        """
+        return n in self.get_nodes()
+
+    def __len__(self):
+        """Number of nodes
+
+        :return: number of nodes
+        """
+        return len(self.get_nodes())
+
+    @abstractmethod
+    def get_nodes(self):
+        """Gets all nodes
+
+        :return: nodes
+        """
+        return frozenset()
+
+    @abstractmethod
+    def get_edges(self, nodes=None):
+        """Gets edges incident to the nodes, by default it should return all edges
+
+        :param nodes: None, single, or collection of nodes to which the returned edges are incident to
+        :return: edges
+        """
+        return frozenset()
 
     def remove_from_edges(self, src, target, collection):
         """Remove edges with the given source and target from the

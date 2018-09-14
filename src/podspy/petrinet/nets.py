@@ -6,6 +6,7 @@ This module contains petri net classes.
 """
 
 from abc import abstractmethod
+from podspy import graph
 from podspy.graph import directed
 from podspy.petrinet.elements import *
 from podspy.petrinet.semantics import Marking
@@ -39,21 +40,53 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
         self.reset_arcs = set() if allows_reset else frozenset()
         self.inhibitor_arcs = set() if allows_inhibitors else frozenset()
 
-    def get_edges(self, src=None, target=None, collection=None):
-        if not (src is None or target is None or collection is None):
-            return super().get_edges(src, target, collection)
-        else:
+    def get_edges(self, nodes=None):
+        if nodes is None:
             edges = set()
             edges.update(self.arcs)
             edges.update(self.inhibitor_arcs)
             edges.update(self.reset_arcs)
-            return edges
+            return frozenset(edges)
+
+        elif nodes in self:
+            # single node
+            nodes = [nodes]
+
+        edges = set()
+
+        for n in nodes:
+            edges.update(self.in_edge_map[n])
+            edges.update(self.out_edge_map[n])
+
+        return frozenset(edges)
+
+    def get_directed_edges(self, src=None, target=None):
+        if src is None and target is None:
+            return self.get_edges()
+
+        if src is None:
+            src = self.get_nodes()
+        elif src in self:
+            src = [src]
+
+        if target is None:
+            target = self.get_nodes()
+        elif target in self:
+            target = [target]
+
+        edges = set()
+
+        for e in self.get_edges(src | target):
+            if e.src in src and e.target in target:
+                edges.add(e)
+
+        return frozenset(edges)
 
     def get_nodes(self):
         nodes = set()
         nodes.update(self.transitions)
         nodes.update(self.places)
-        return nodes
+        return frozenset(nodes)
 
     def add_reset_arc(self, p, t, label=None):
         self.check_add_edge(p, t)
@@ -96,11 +129,11 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
         self.remove_from_edges(p, t, self.inhibitor_arcs)
 
     def get_inhibitor_arc(self, p, t):
-        arcs = self.get_edges(p, t, self.inhibitor_arcs)
+        arcs = graph.utils.get_edges(p, t, self.inhibitor_arcs)
         return next(arcs)
 
     def get_reset_arc(self, p, t):
-        arcs = self.get_edges(p, t, self.reset_arcs)
+        arcs = graph.utils.get_edges(p, t, self.reset_arcs)
         return next(arcs)
 
     def add_transition(self, label):
