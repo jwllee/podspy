@@ -44,7 +44,7 @@ def test_import_petrinet():
     with open(net_fp, 'r') as f:
         pnml = io.import_pnml(f)
 
-    net, marking, final_markings = io.pnml2pn(pnml)
+    net, marking, final_markings = io.pnml_to_pn(pnml)
 
     assert isinstance(net, Petrinet)
     assert isinstance(marking, Marking)
@@ -79,9 +79,9 @@ def test_ptnet2pnml_without_layout(net_fp):
     with open(net_fp, 'r') as f:
         pnml = io.import_pnml(f)
 
-    apnet = AcceptingPetrinet(*io.pnml2pn(pnml))
+    apnet = AcceptingPetrinet(*io.pnml_to_pn(pnml))
 
-    converted_pnml = io.apn2pnml(apnet)
+    converted_pnml = io.apn_to_pnml(apnet)
 
     assert isinstance(converted_pnml, Pnml)
     assert pnml == converted_pnml
@@ -104,7 +104,7 @@ def test_export_petrinet_without_layout(net_fp):
     with open(net_fp, 'r') as f:
         pnml = io.import_pnml(f)
 
-    net, marking, final_markings = io.pnml2pn(pnml)
+    net, marking, final_markings = io.pnml_to_pn(pnml)
 
     assert isinstance(marking, Marking)
 

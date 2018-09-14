@@ -13,7 +13,7 @@ def test_net_to_agraph():
     with open(net_fp, 'r') as f:
         pnml = petrinet.import_pnml(f)
 
-    net, marking, final_markings = petrinet.pnml2pn(pnml)
+    net, marking, final_markings = petrinet.pnml_to_pn(pnml)
 
     G = petrinet.to_agraph(net, marking=marking)
 
@@ -33,7 +33,7 @@ def test_apn_to_agraph():
     with open(net_fp, 'r') as f:
         pnml = petrinet.import_pnml(f)
 
-    net, marking, final_markings = petrinet.pnml2pn(pnml)
+    net, marking, final_markings = petrinet.pnml_to_pn(pnml)
     apn = petrinet.PetrinetFactory.new_accepting_petrinet(net, marking, final_markings)
 
     G = petrinet.to_agraph(apn, marking=marking)

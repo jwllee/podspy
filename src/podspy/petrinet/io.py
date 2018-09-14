@@ -79,7 +79,7 @@ def import_apna(file, dirpath=None):
 
         with open(pn_fp, 'r') as f:
             pnml = import_apnml(f)
-            net, init, final = pnml2pn(pnml)
+            net, init, final = pnml_to_pn(pnml)
 
             # logger.debug('No. of trans: {}'.format(len(net.transitions)))
             # for t in net.transitions:
@@ -91,7 +91,7 @@ def import_apna(file, dirpath=None):
     return apna
 
 
-def pnml2pn(pnml):
+def pnml_to_pn(pnml):
     pnml_net = pnml.net_list[0]
     net_label = pnml_net.name.text.text if pnml_net.name else 'net0'
     net = fty.PetrinetFactory.new_petrinet(net_label)
@@ -101,22 +101,22 @@ def pnml2pn(pnml):
     return net, marking, final_markings
 
 
-def pn2pnml(net, marking=None, final_markings=None):
+def pn_to_pnml(net, marking=None, final_markings=None):
     marked_nets = {net: marking}
     final_marked_nets = {net: final_markings}
     pnml, id_map = pnml_fty.PnmlElementFactory.net2pnml(marked_nets, final_marked_nets)
     return pnml, id_map
 
 
-def apn2pnml(net):
-    return pn2pnml(net.net, net.init_marking, net.final_markings)
+def apn_to_pnml(net):
+    return pn_to_pnml(net.net, net.init_marking, net.final_markings)
 
 
 def export_net(net, file, marking=None, final_markings=None):
     if isinstance(net, nts.AbstractResetInhibitorNet):
-        pnml, id_map = pn2pnml(net, marking, final_markings)
+        pnml, id_map = pn_to_pnml(net, marking, final_markings)
     elif isinstance(net, nts.AcceptingPetrinet):
-        pnml, id_map = apn2pnml(net)
+        pnml, id_map = apn_to_pnml(net)
     else:
         raise ValueError('Do not recognize net class: {}'.format(net.__class__))
 
