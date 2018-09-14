@@ -3,4 +3,5 @@
 GRAPH = 'graph'
 NODE = 'node'
 EDGE = 'edge'
+POSITION = 'pos'
 
