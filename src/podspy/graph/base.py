@@ -20,10 +20,10 @@ logger = logging.getLogger(__file__)
 
 class AbstractGraphElement(ABC):
     @abstractmethod
-    def __init__(self, label='no label', _map=None):
+    def __init__(self, label='no label', attribs=None):
         self.label = label
-        self.map = _map if _map is not None else dict()
-        self.map[attrib.LABEL] = self.label
+        self.attribs = attribs if attribs is not None else dict()
+        self.attribs[attrib.LABEL] = self.label
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, self.label)

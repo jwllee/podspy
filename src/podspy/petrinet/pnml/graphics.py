@@ -444,19 +444,19 @@ class PnmlLine(PnmlElement):
 
         if self.color:
             if isinstance(element, Arc):
-                element.map[atr.EDGECOLOR] = self.color
+                element.attribs[atr.EDGECOLOR] = self.color
             else:
                 element.map[atr.STROKECOLOR] = self.color
 
         if self.width:
-            element.map[atr.LINEWIDTH] = self.width
+            element.attribs[atr.LINEWIDTH] = self.width
 
         if self.style == Style.STYLE_DASH:
-            element.map[atr.DASHPATTERN] = (3., 3.)
+            element.attribs[atr.DASHPATTERN] = (3., 3.)
         elif self.style == Style.STYLE_DOT:
-            element.map[atr.DASHPATTERN] = (1., 3.)
+            element.attribs[atr.DASHPATTERN] = (1., 3.)
         elif self.style != Style.STYLE_DEFAULT:
-            element.map[atr.DASHPATTERN] = (1., 0.)
+            element.attribs[atr.DASHPATTERN] = (1., 0.)
 
     def __repr__(self):
         return '{}({}, {}, {}, {})'.format(self.__class__.__name__,

@@ -74,10 +74,10 @@ class Arc(PetrinetEdge):
         label = str(weight)
         super().__init__(src, target, label, *args, **kwargs)
         self._weight = weight
-        self.map[attrib.LABEL] = str(self._weight)
-        self.map[attrib.EDGEEND] = attrib.ARROWTYPE_TECHNICAL
-        self.map[attrib.EDGEENDFILLED] = True
-        self.map[attrib.SHOWLABEL] = self._weight > 1
+        self.attribs[attrib.LABEL] = str(self._weight)
+        self.attribs[attrib.EDGEEND] = attrib.ARROWTYPE_TECHNICAL
+        self.attribs[attrib.EDGEENDFILLED] = True
+        self.attribs[attrib.SHOWLABEL] = self._weight > 1
 
     @property
     def weight(self):
@@ -87,8 +87,8 @@ class Arc(PetrinetEdge):
     def weight(self, weight):
         # update attribute
         self._weight = weight
-        self.map[attrib.LABEL] = str(weight)
-        self.map[attrib.SHOWLABEL] = weight > 1
+        self.attribs[attrib.LABEL] = str(weight)
+        self.attribs[attrib.SHOWLABEL] = weight > 1
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
@@ -101,8 +101,8 @@ class Arc(PetrinetEdge):
 class InhibitorArc(PetrinetEdge):
     def __init__(self, src, target, label, *args, **kwargs):
         super().__init__(src, target, label, *args, **kwargs)
-        self.map[attrib.EDGEEND] = attrib.ARROWTYPE_CIRCLE
-        self.map[attrib.EDGEENDFILLED] = False
+        self.attribs[attrib.EDGEEND] = attrib.ARROWTYPE_CIRCLE
+        self.attribs[attrib.EDGEENDFILLED] = False
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
@@ -115,8 +115,8 @@ class InhibitorArc(PetrinetEdge):
 class ResetArc(PetrinetEdge):
     def __init__(self, src, target, label, *args, **kwargs):
         super().__init__(src, target, label, *args, **kwargs)
-        self.map[attrib.EDGEEND] = attrib.ARROWTYPE_SIMPLE
-        self.map[attrib.EDGEENDFILLED] = False
+        self.attribs[attrib.EDGEEND] = attrib.ARROWTYPE_SIMPLE
+        self.attribs[attrib.EDGEENDFILLED] = False
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__,
@@ -129,10 +129,10 @@ class ResetArc(PetrinetEdge):
 class Place(PetrinetNode):
     def __init__(self, graph, label, *args, **kwargs):
         super().__init__(graph, label, *args, **kwargs)
-        self.map[attrib.SHAPE] = shapes.ELLIPSE
-        self.map[attrib.RESIZABLE] = True
-        self.map[attrib.SIZE] = (25, 25)
-        self.map[attrib.SHOWLABEL] = False
+        self.attribs[attrib.SHAPE] = shapes.ELLIPSE
+        self.attribs[attrib.RESIZABLE] = True
+        self.attribs[attrib.SIZE] = (25, 25)
+        self.attribs[attrib.SHOWLABEL] = False
 
     def __repr__(self):
         return '{}()'.format(self.__class__.__name__)
@@ -152,13 +152,13 @@ class Transition(PetrinetNode):
         # logger.debug('Setting {} to invisible: {}'.format(self, invisible))
         self._is_invisible = invisible
         if self._is_invisible:
-            self.map[attrib.SIZE] = (30, 30)
-            self.map[attrib.SHOWLABEL] = False
-            self.map[attrib.FILLCOLOR] = colors.BLACK
+            self.attribs[attrib.SIZE] = (30, 30)
+            self.attribs[attrib.SHOWLABEL] = False
+            self.attribs[attrib.FILLCOLOR] = colors.BLACK
         else:
-            self.map[attrib.SIZE] = (50, 40)
-            self.map[attrib.SHOWLABEL] = True
-            self.map[attrib.FILLCOLOR] = None
+            self.attribs[attrib.SIZE] = (50, 40)
+            self.attribs[attrib.SHOWLABEL] = True
+            self.attribs[attrib.FILLCOLOR] = None
 
     def __repr__(self):
         return '{}({}, {})'.format(self.__class__.__name__,
