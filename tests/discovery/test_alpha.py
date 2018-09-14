@@ -11,8 +11,8 @@ import numpy as np
 
 from podspy.discovery import alpha
 from podspy.petrinet.nets import *
-from podspy.petrinet import visualize as vis
 from podspy.structure import CausalMatrix
+from podspy import petrinet
 
 
 @pytest.fixture()
@@ -41,8 +41,8 @@ class TestAlphaMiner:
         assert isinstance(apn, AcceptingPetrinet)
 
         net_fp = os.path.join('.', 'tests', 'alpha.png')
-        G = vis.net2dot(apn.net)
-        # G.draw(net_fp)
+        G = petrinet.to_agraph(apn)
+        # G.draw(net_fp, prog='dot')
 
         net, init_marking, final_markings = apn
         final_marking = final_markings.pop()

@@ -11,7 +11,6 @@ from io import StringIO
 from podspy.petrinet.nets import *
 from podspy.petrinet.pnml.elements import *
 from podspy.petrinet.semantics import *
-import podspy.petrinet.visualize as vis
 from podspy.petrinet import factory as fty, io
 
 __author__ = "Wai Lam Jonathan Lee"
