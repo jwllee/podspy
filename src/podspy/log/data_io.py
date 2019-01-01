@@ -5,16 +5,23 @@
 This module reads log files.
 """
 
-import logging, uuid, time
+import logging, uuid, time, os, ciso8601, enum
 from lxml import etree
 from podspy.log import constants as const
 from podspy.log import table as tble
 from podspy.utils import conversion as cvrn
+import podspy.log.utils as log_utils
 from urllib.request import urlparse
 import pandas as pd
 
 
 logger = logging.getLogger(__file__)
+
+
+__all__ = [
+    'ImportMode',
+    'import_log_table'
+]
 
 
 # tags
@@ -35,12 +42,50 @@ CONTAINER = 'container'
 LIST = 'list'
 
 
-def import_log_table(fp):
-    start = time.time()
-    parser = etree.XMLParser(target=LogTableTarget())
-    lt = etree.parse(fp, parser)
-    diff = time.time() - start
+class ImportMode(enum.Enum):
+    ALL = 0
+    BASIC = 1
 
+    def get_include_attribs(self):
+        if self == ImportMode.ALL:
+            return None
+        elif self == ImportMode.BASIC:
+            return {
+                EVENT: { 'concept:name', 'org:resource', 'time:timestamp', 'lifecycle:transition' },
+                TRACE: { 'concept:name' },
+                LOG: {}
+            }
+        else:
+            return None
+
+
+def import_log_table(fp, caseid_key='concept:name', import_mode=ImportMode.BASIC, include_attribs=None):
+    """Import a xes file as log table
+
+    :param fp: file path to the XES file
+    :param caseid_key: trace attribute key that allows identification of a unique trace
+    :param import_mode: import mode, quick way to limit the event, trace, and log attributes to import for memory reason
+    :param include_attribs: event, trace, and log attribute sets to include, require all three if this is not None. For
+    example, d = { 'event': { 'e_a0', 'e_a1' }, 'trace': { 't_a0', 't_a1' }, 'log': { 'l_a0', 'l_a1' }}
+    :type include_attribs: dict that maps strings to sets or None
+    :return: LogTable
+    """
+
+    start = time.time()
+
+    import_mode_attribs = import_mode.get_include_attribs()
+
+    if include_attribs is not None:
+        if import_mode_attribs is not None:
+            include_attribs[EVENT].update(import_mode_attribs[EVENT])
+            include_attribs[TRACE].update(import_mode_attribs[TRACE])
+            include_attribs[LOG].update(import_mode_attribs[LOG])
+    else:
+        include_attribs = import_mode_attribs
+
+    lt = import_log_table_iterparse(fp, caseid_key, include_attribs)
+
+    diff = time.time() - start
     logger.info('Parsing log to log table took {} seconds'.format(diff))
 
     return lt
@@ -208,7 +253,7 @@ class LogTableTarget:
                 logger.warning('Not supporting list attributes')
                 attrib = (None, None)
 
-            elif localname == CONTINUOUS:
+            elif localname == CONTAINER:
                 logger.warning('Not supporting container attributes')
                 attrib = (None, None)
 
@@ -278,3 +323,198 @@ class LogTableTarget:
         lt.xes_attributes = self.__xes_attribs
 
         return lt
+
+
+def is_attrib(tag):
+    return tag.endswith((
+        LITERAL, TIMESTAMP, DISCRETE, BOOLEAN, CONTINUOUS, ID, LIST, CONTAINER
+    ))
+
+
+def process_attributable(elem, to_include=None):
+    result = dict()
+    for child in elem:
+        tag = child.tag.lower()
+
+        if not is_attrib(tag):
+            continue
+
+        key = child.get('key', 'UNKNOWN')
+        value = child.get('value', '')
+
+        if to_include is not None and key not in to_include:
+            continue
+
+        if tag.endswith(LITERAL):
+            result[key] = value
+        elif tag == TIMESTAMP:
+            time_value = ciso8601.parse_datetime(value)
+            result[key] = time_value
+        elif tag.endswith(DISCRETE):
+            try:
+                int_value = int(value)
+            except ValueError as e:
+                logger.error('Cannot convert {} with discrete value {}: {}'.format(key, value, e))
+                int_value = 0
+            result[key] = int_value
+        elif tag.endswith(CONTINUOUS):
+            try:
+                float_value = float(value)
+            except ValueError as e:
+                logger.error('Cannot convert {} with continuous value {}: {}'.format(key, value, e))
+                float_value = 0.
+            result[key] = float_value
+        elif tag.endswith(BOOLEAN):
+            bool_value = True if value.lower() == 'true' else False
+            result[key] = bool_value
+        elif tag.endswith(ID):
+            try:
+                id_value = uuid.UUID(value)
+            except ValueError as e:
+                logger.error('Cannot convert {} with ID value {}: {}'.format(key, value, e))
+                id_value = value
+            result[key] = id_value
+        elif tag.endswith(LIST):
+            logger.warning('Not supporting list attribute: {}'.format(key))
+        elif tag.endswith(CONTAINER):
+            logger.warning('Not supporting container attribute: {}'.format(key))
+    return result
+
+
+def process_extension(elem):
+    name = elem.get('name')
+    prefix = elem.get('prefix')
+    uri = urlparse(elem.get('uri'))
+    return name, prefix, uri
+
+
+def process_classifier(elem, global_event_attrib_keys):
+    name = elem.get('name')
+    keys = elem.get('keys')
+    key_list = list()
+
+    for key in global_event_attrib_keys:
+        if key in keys:
+            keys = keys.replace(key, '')
+            key_list.append(key)
+
+    return name, key_list
+
+
+def import_log_table_iterparse(fp, caseid_key, include_attribs=None):
+    """
+    https://www.ibm.com/developerworks/xml/library/x-hiperfparse/
+
+    :param fp: file path to XES log file
+    :param caseid_key: attribute key for trace caseid
+    :param include_attribs: dict of string to string set mapping of attributes to include
+    :return: LogTable
+    """
+
+    log_attrib_dict = dict()
+    global_trace_attrib_dict = dict()
+    global_event_attrib_dict = dict()
+    xes_attrib_dict = dict()
+    classifier_dict = dict()
+    extension_dict = dict()
+
+    # decompress compressed file if necessary
+    fp_final = log_utils.temp_decompress(fp) if fp.endswith('.gz') else fp
+
+    to_include_event = include_attribs[EVENT] if include_attribs is not None else None
+    to_include_trace = include_attribs[TRACE] if include_attribs is not None else None
+    to_include_log = include_attribs[LOG] if include_attribs is not None else None
+
+    use_caseid_key = to_include_trace is None or caseid_key in to_include_trace
+
+    tag = [ EVENT, TRACE, LOG, CLASSIFIER, EXTENSION, GLOBAL ]
+    # ignore namespace
+    tag = list(map(lambda t: '{*}' + t, tag))
+    context = etree.iterparse(fp_final, events=('end',), tag=tag)
+
+    # temporary variables
+    trace_ind, trace_start_ind, trace_end_ind = 0, 0, 0
+    trace_events = list()
+    traces = list()
+
+    start = time.time()
+    for event, elem in context:
+        tag = elem.tag.lower()
+
+        if tag.endswith(EVENT):
+            # event row is a dict
+            event_row = process_attributable(elem, to_include_event)
+            trace_events.append(event_row)
+            trace_end_ind += 1
+
+        elif tag.endswith(TRACE):
+            # trace row is a dict
+            trace_row = process_attributable(elem, to_include_trace)
+            caseid = trace_row.get(caseid_key, None) if use_caseid_key else trace_ind
+            caseid = trace_ind if caseid is None else caseid
+            trace_row[const.CASEID] = caseid
+            traces.append(trace_row)
+
+            # add back the caseids to the corresponding events
+            for i in range(trace_start_ind, trace_end_ind):
+                trace_events[i][const.CASEID] = caseid
+
+            # increment trace index
+            trace_ind += 1
+            trace_start_ind = trace_end_ind
+
+        elif tag.endswith(LOG):
+            for key, value in elem.items():
+                xes_attrib_dict[key] = value
+            log_attrib_dict = process_attributable(elem, to_include_log)
+
+        elif tag.endswith(EXTENSION):
+            extension = process_extension(elem)
+            extension_dict[extension[0]] = extension
+
+        elif tag.endswith(CLASSIFIER):
+            classifier_name, classifier_keys = process_classifier(elem, global_event_attrib_dict)
+            classifier_dict[classifier_name] = classifier_keys
+
+        elif tag.endswith(GLOBAL):
+            scope = elem.get('scope')
+            if scope.lower() == TRACE:
+                global_trace_attrib_dict = process_attributable(elem)
+            else: # scope == event
+                global_event_attrib_dict = process_attributable(elem)
+
+        # It's safe to call clear() here because no descendants will be
+        # accessed
+        elem.clear()
+
+        # # Also eliminate now-empty references from the root node to elem
+        if tag.endswith(TRACE):
+            while elem.getprevious() is True:
+                prev_sibling = elem.getprevious()
+                if not is_attrib(prev_sibling.tag.lower()):
+                    elem.getparent().remove(prev_sibling)
+                else:
+                    break
+
+    end = time.time()
+    logger.info('Parsing log took {:.2f}s'.format(end - start))
+
+    del context
+
+    if fp.endswith('.gz'):
+        os.remove(fp_final)
+
+    event_df = pd.DataFrame(trace_events)
+    trace_df = pd.DataFrame(traces)
+
+    lt = tble.LogTable(
+        trace_df=trace_df,
+        event_df=event_df,
+        attributes=log_attrib_dict,
+        global_event_attributes=global_event_attrib_dict,
+        global_trace_attributes=global_trace_attrib_dict,
+        classifiers=classifier_dict,
+        extensions=extension_dict
+    )
+
+    return lt

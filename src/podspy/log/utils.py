@@ -7,7 +7,7 @@ reading xes log files.
 """
 
 
-import os
+import os, gzip, shutil, tempfile
 import pandas as pd
 
 
@@ -91,3 +91,18 @@ def make_xattribute(attr_type, key, value, extension):
         xattribute = mapping[attr_type](key, value)
         
     return xattribute
+
+
+def temp_decompress(fpath):
+
+    # create temporary file to hold the decompressed file
+    prefix = fpath.split('.')[-2]
+    # get a unique temporary filepath
+    temp = tempfile.NamedTemporaryFile(prefix=prefix)
+    temp.close()
+
+    with gzip.open(fpath, 'rb') as f_in:
+        with open(temp.name, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    return temp.name

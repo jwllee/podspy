@@ -12,7 +12,7 @@ from urllib.request import urlparse
 import numpy as np
 from lxml import etree
 
-from podspy.log import constants, io
+from podspy.log import constants, data_io
 from podspy.log import table as tble
 
 
@@ -198,13 +198,13 @@ def xlog_xml(request):
 
 
 def test_feed_parser_interface(xlog_xml):
-    parser = etree.XMLParser(target=io.LogTableTarget())
+    parser = etree.XMLParser(target=data_io.LogTableTarget())
     parser.feed(xlog_xml[0])
     parser.close()
 
 
 def test_parse_log_xml(xlog_xml):
-    parser = etree.XMLParser(target=io.LogTableTarget())
+    parser = etree.XMLParser(target=data_io.LogTableTarget())
     parser.feed(xlog_xml[0])
     lt = parser.close()
 
@@ -243,7 +243,7 @@ def test_parse_log_xml(xlog_xml):
 
 
 def test_time_parse_log_xml(xlog_xml):
-    parser = etree.XMLParser(target=io.LogTableTarget())
+    parser = etree.XMLParser(target=data_io.LogTableTarget())
     start = time.time()
     parser.feed(xlog_xml[0])
     lt = parser.close()
@@ -270,5 +270,5 @@ def test_time_parse_log_xml(xlog_xml):
 @pytest.mark.slowtest
 def test_time_parse_BPIC2018():
     log_file = os.path.join('.', 'tests', 'testdata', 'BPIC2018.xes.gz')
-    lt = io.import_log_table(log_file)
+    lt = data_io.import_log_table(log_file)
     print('Log table is {}b'.format(sys.getsizeof(lt)))
