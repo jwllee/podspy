@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""This is the example module.
-
-This module does stuff.
-"""
-
+# loading modules into subpackage namespace
+from podspy.log import data_io
+from podspy.log import table
+from podspy.log import factory

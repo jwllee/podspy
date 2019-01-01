@@ -16,8 +16,8 @@ from opyenxes.model.XAttributeList import XAttributeList
 from opyenxes.model.XAttributeContainer import XAttributeContainer
 from opyenxes.model.XAttributeTimestamp import XAttributeTimestamp
 from opyenxes.classification.XEventAndClassifier import XEventAndClassifier
-from podspy.log import constants as cst
-from podspy.log import table as tb
+from . import constants as cst
+from . import table as tb
 
 import logging
 import pandas as pd

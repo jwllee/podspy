@@ -7,10 +7,10 @@ This module reads log files.
 
 import logging, uuid, time, os, ciso8601, enum
 from lxml import etree
-from podspy.log import constants as const
-from podspy.log import table as tble
+from . import constants as const
+from . import table as tble
 from podspy.utils import conversion as cvrn
-import podspy.log.utils as log_utils
+from . import utils as log_utils
 from urllib.request import urlparse
 import pandas as pd
 
