@@ -12,10 +12,17 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
 
+# get the project root dir, which is the parent dir of this cwd
+cwd = os.getcwd()
+project_root = os.path.join(os.path.dirname(cwd), 'src')
+
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, project_root)
+
+import podspy
 
 # -- Project information -----------------------------------------------------
 
@@ -24,9 +31,9 @@ copyright = '2019, Wai Lam Jonathan Lee'
 author = 'Wai Lam Jonathan Lee'
 
 # The short X.Y version
-version = ''
+version = podspy.__version__
 # The full version, including alpha/beta/rc tags
-release = ''
+release = podspy.__version__
 
 
 # -- General configuration ---------------------------------------------------
