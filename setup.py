@@ -10,14 +10,40 @@ __author__ = "Wai Lam Jonathan Lee"
 __email__ = "walee@uc.cl"
 
 
+with open('README.md') as readme_file:
+    readme = readme_file.read()
+
+
+requirements = [
+    'numpy',
+    'pandas',
+    'opyenxes',
+    'ciso8601',
+    'lxml',
+    'pygraphviz'
+]
+
+
+test_requirements = [
+    'pytest'
+]
+
+
+setup_requirements = [
+    'pytest-runner'
+]
+
+
 setup(
     name='podspy',
     version='0.1.0',
     description='A SciKit for process oriented data science',
+    long_description=readme,
     author='Wai Lam Jonathan Lee',
     author_email='walee@uc.cl',
-    install_requires=['numpy', 'pandas', 'opyenxes', 'ciso8601', 'lxml', 'pygraphviz'],
-    tests_require=['pytest'],
+    install_requires=requirements,
+    tests_require=test_requirements,
+    setup_requires=setup_requirements,
     entry_points={'pytest11': ['podspy = podspy']},
     packages=find_packages('src'),
     package_dir={'': 'src'},
