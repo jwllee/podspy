@@ -16,7 +16,7 @@ setup(
     description='A SciKit for process oriented data science',
     author='Wai Lam Jonathan Lee',
     author_email='walee@uc.cl',
-    install_requires=['numpy', 'pandas', 'opyenxes'],
+    install_requires=['numpy', 'pandas', 'opyenxes', 'ciso8601', 'lxml', 'pygraphviz'],
     tests_require=['pytest'],
     entry_points={'pytest11': ['podspy = podspy']},
     packages=find_packages('src'),
