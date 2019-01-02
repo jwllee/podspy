@@ -20,7 +20,8 @@ requirements = [
     'opyenxes>=0.3.0',
     'ciso8601>=2.1.1',
     'lxml>=4.2.5',
-    'pygraphviz>=1.5'
+    'pygraphviz>=1.5',
+    'sortedcontainers>=2.1.0'
 ]
 
 
