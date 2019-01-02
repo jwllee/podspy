@@ -36,7 +36,7 @@ setup_requirements = [
 
 setup(
     name='podspy',
-    version='0.1.0',
+    version='0.1.1',
     description='A SciKit for process oriented data science',
     long_description=readme,
     author='Wai Lam Jonathan Lee',
