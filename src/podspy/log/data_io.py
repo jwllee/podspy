@@ -77,9 +77,9 @@ def import_log_table(fp, caseid_key='concept:name', import_mode=ImportMode.BASIC
 
     if include_attribs is not None:
         if import_mode_attribs is not None:
-            include_attribs[EVENT].update(import_mode_attribs[EVENT])
-            include_attribs[TRACE].update(import_mode_attribs[TRACE])
-            include_attribs[LOG].update(import_mode_attribs[LOG])
+            include_attribs[EVENT] = include_attribs.get(EVENT, set()).union(import_mode_attribs[EVENT])
+            include_attribs[TRACE] = include_attribs.get(TRACE, set()).union(import_mode_attribs[TRACE])
+            include_attribs[LOG] = include_attribs.get(LOG, set()).union(import_mode_attribs[LOG])
     else:
         include_attribs = import_mode_attribs
 
@@ -421,9 +421,9 @@ def import_log_table_iterparse(fp, caseid_key, include_attribs=None):
     # decompress compressed file if necessary
     fp_final = log_utils.temp_decompress(fp) if fp.endswith('.gz') else fp
 
-    to_include_event = include_attribs[EVENT] if include_attribs is not None else None
-    to_include_trace = include_attribs[TRACE] if include_attribs is not None else None
-    to_include_log = include_attribs[LOG] if include_attribs is not None else None
+    to_include_event = include_attribs.get(EVENT, None) if include_attribs is not None else None
+    to_include_trace = include_attribs.get(TRACE, None) if include_attribs is not None else None
+    to_include_log = include_attribs.get(LOG, None) if include_attribs is not None else None
 
     use_caseid_key = to_include_trace is None or caseid_key in to_include_trace
 
