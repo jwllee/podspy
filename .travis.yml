@@ -24,6 +24,11 @@ deploy:
 install: pip install tox-travis
 language: python
 python:
+  - "3.7"
   - "3.6"
   - "3.5"
 script: tox
+addons:
+  apt:
+    packages:
+    - graphviz
