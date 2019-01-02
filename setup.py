@@ -15,22 +15,22 @@ with open('README.md') as readme_file:
 
 
 requirements = [
-    'numpy',
-    'pandas',
-    'opyenxes',
-    'ciso8601',
-    'lxml',
-    'pygraphviz'
+    'numpy>=1.15.4',
+    'pandas>=0.23.4',
+    'opyenxes>=0.3.0',
+    'ciso8601>=2.1.1',
+    'lxml>=4.2.5',
+    'pygraphviz>=1.5'
 ]
 
 
 test_requirements = [
-    'pytest'
+    'pytest>=4.0.2'
 ]
 
 
 setup_requirements = [
-    'pytest-runner'
+    'pytest-runner>=4.2'
 ]
 
 
