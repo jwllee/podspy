@@ -38,6 +38,7 @@ setup(
     name='podspy',
     version='0.1.2',
     description='A SciKit for process oriented data science',
+    long_description_content_type='text/markdown',
     long_description=readme,
     author='Wai Lam Jonathan Lee',
     author_email='walee@uc.cl',
