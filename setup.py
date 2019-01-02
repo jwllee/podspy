@@ -36,7 +36,7 @@ setup_requirements = [
 
 setup(
     name='podspy',
-    version='0.1.2',
+    version='0.1.3',
     description='A SciKit for process oriented data science',
     long_description_content_type='text/markdown',
     long_description=readme,
