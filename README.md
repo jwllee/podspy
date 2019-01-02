@@ -1,6 +1,14 @@
 podspy: A SciKit for process oriented data science
 ===
-This is an attempt to nicely package some of the 1s and 0s from my personal code.
+
+[![pypi](https://img.shields.io/pypi/v/podspy.svg)](https://pypi.python.org/pypi/podspy)
+[![travis](https://img.shields.io/travis/wailamjonathanlee/podspy.svg)](https://travis-ci.org/wailamjonathanlee/podspy)
+[![readthedocs](https://readthedocs.org/projects/podspy/badge/?version=latest)](http://podspy.readthedocs.io/en/latest/?badge=latest)
+[![pyup](https://pyup.io/repos/github/wailamjonathanlee/podspy/shield.svg)](https://pyup.io/repos/github/wailamjonathanlee/podspy/)
+
+Description
+---
+Basic functionalities for doing process mining using Python, e.g., importing an event log, and creating a petri net.
 
 Notes
 ---
@@ -14,5 +22,5 @@ Features
 Installation
 ---
 ```
-  pip install podspy
+pip install podspy
 ```
