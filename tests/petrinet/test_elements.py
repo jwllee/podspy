@@ -32,6 +32,35 @@ def test_make_edge():
     assert isinstance(edge, Arc)
 
 
+class TestTransition():
+    def test_make_transition(self):
+        graph = None
+        t = Transition(graph, 'a')
+        assert t.label == 'a'
+        assert t.is_invisible == False
+
+
+    def test_make_invisible_transition(self):
+        graph = None
+        t = Transition(graph, 'a', is_invisible=True)
+        assert t.label == 'a'
+        assert t.is_invisible == True
+
+    def test_make_visible_transition_invisible(self):
+        graph = None
+        t = Transition(graph, 'a')
+        assert t.is_invisible == False
+        t.is_invisible = True
+        assert t.is_invisible == True
+
+    def test_make_invisible_transition_visible(self):
+        graph = None
+        t = Transition(graph, 'a', True)
+        assert t.is_invisible == True
+        t.is_invisible = False
+        assert t.is_invisible == False
+
+
 def test_edge_equality():
     # using subclasses of the abstract petrinet edge class to test it
 

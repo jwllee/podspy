@@ -137,9 +137,9 @@ class Place(PetrinetNode):
 
 
 class Transition(PetrinetNode):
-    def __init__(self, graph, label, *args, **kwargs):
+    def __init__(self, graph, label, is_invisible=False, *args, **kwargs):
         super().__init__(graph, label, *args, **kwargs)
-        self._is_invisible = False
+        self._is_invisible = is_invisible
 
     @property
     def is_invisible(self):
