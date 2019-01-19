@@ -131,8 +131,8 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
         arcs = graph.utils.get_edges(p, t, self.reset_arcs)
         return next(arcs)
 
-    def add_transition(self, label):
-        t = Transition(self, label)
+    def add_transition(self, label, is_invisible=False):
+        t = Transition(self, label, is_invisible)
         self.transitions.add(t)
         self.graph_element_added(t)
         return t

@@ -113,6 +113,14 @@ class TestPetrinet:
         t_a = net.add_transition('a')
         assert t_a is not None
         assert t_a.label == 'a'
+        assert t_a.is_invisible == False
+
+    def test_add_invisible_transition(self):
+        net = PetrinetFactory.new_petrinet('net0')
+        t = net.add_transition('a', is_invisible=True)
+        assert t is not None
+        assert t.label == 'a'
+        assert t.is_invisible == True
 
     def test_add_place(self):
         net = PetrinetFactory.new_petrinet('net0')
