@@ -6,9 +6,7 @@ This module tests petri net classes.
 """
 
 
-from podspy.petrinet.factory import *
-from podspy.petrinet import semantics as smc
-from podspy.petrinet import nets as nt
+from podspy.petrinet import *
 
 import pandas as pd
 import numpy as np
@@ -184,7 +182,7 @@ class TestAcceptingPetrinet:
         apn = PetrinetFactory.new_accepting_petrinet(pn)
         pn, init, final = apn
 
-        assert isinstance(pn, nt.Petrinet)
+        assert isinstance(pn, Petrinet)
         assert isinstance(init, smc.Marking)
         assert isinstance(final, set)
         assert len(final) == 1
