@@ -55,19 +55,22 @@ class TestPetrinet:
         sorted_places = sorted(places, key=lambda p: p.label)
         sorted_place_labels = list(map(lambda p: p.label, sorted_places))
 
-        expected_p_to_t_df = pd.DataFrame(mat.copy(), columns=sorted_trans_labels, index=sorted_place_labels)
+        expected_p_to_t_df = pd.DataFrame(mat.copy(), columns=sorted_trans_labels,
+                                          index=sorted_place_labels, dtype=np.int)
         expected_p_to_t_df.loc['p1', 'a'] = 1
         expected_p_to_t_df.loc['p2', 'b'] = 1
         expected_p_to_t_df.loc['p3', 'c'] = 1
         expected_p_to_t_df.loc['p4', 'd'] = 1
         expected_p_to_t_df.loc['p5', 'd'] = 1
 
-        expected_t_to_p_df = pd.DataFrame(mat.copy(), columns=sorted_trans_labels, index=sorted_place_labels)
-        expected_t_to_p_df.loc['p2', 'a'] = 1
-        expected_t_to_p_df.loc['p3', 'a'] = 1
-        expected_t_to_p_df.loc['p4', 'b'] = 1
-        expected_t_to_p_df.loc['p5', 'c'] = 1
-        expected_t_to_p_df.loc['p6', 'd'] = 1
+        mat = np.zeros((4, 6))
+        expected_t_to_p_df = pd.DataFrame(mat, columns=sorted_place_labels,
+                                          index=sorted_trans_labels, dtype=np.int)
+        expected_t_to_p_df.loc['a', 'p2'] = 1
+        expected_t_to_p_df.loc['a', 'p3'] = 1
+        expected_t_to_p_df.loc['b', 'p4'] = 1
+        expected_t_to_p_df.loc['c', 'p5'] = 1
+        expected_t_to_p_df.loc['d', 'p6'] = 1
 
         p_to_t_df, t_to_p_df = net.get_transition_relation_dfs()
 

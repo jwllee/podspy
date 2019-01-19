@@ -321,6 +321,9 @@ class Petrinet(AbstractResetInhibitorNet):
             place_labels, weights = zip(*in_p_to_t)
             p_to_t_df.loc[t.label, place_labels] = weights
 
+        # need to transpose p_to_t_df
+        p_to_t_df = p_to_t_df.transpose()
+
         logger.debug('\n{}\n{}'.format(p_to_t_df, t_to_p_df))
 
         return p_to_t_df, t_to_p_df
