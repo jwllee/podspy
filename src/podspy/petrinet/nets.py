@@ -46,10 +46,6 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
             edges.update(self.reset_arcs)
             return frozenset(edges)
 
-        elif nodes in self:
-            # single node
-            nodes = [nodes]
-
         edges = set()
 
         for n in nodes:
@@ -73,8 +69,9 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
             target = [target]
 
         edges = set()
+        nodes = list(src) + list(target)
 
-        for e in self.get_edges(src | target):
+        for e in self.get_edges(nodes):
             if e.src in src and e.target in target:
                 edges.add(e)
 

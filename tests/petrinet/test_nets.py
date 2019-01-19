@@ -149,6 +149,35 @@ class TestPetrinet:
         for edge in edges:
             assert edge in expected, '({},{}) not in {}'.format(edge.src.label, edge.target.label, expected_str)
 
+    def test_get_directed_edges_from_all_nodes(self, net_t4_p3_a8):
+        net, trans, places, arcs = net_t4_p3_a8
+        edges = net.get_directed_edges()
+        for arc in arcs:
+            assert arc in edges
+        for edge in edges:
+            assert edge in arcs
+
+    def test_get_directed_edges_from_single_src(self, net_t4_p3_a8):
+        net, trans, places, arcs = net_t4_p3_a8
+        src = trans[0]
+        expected = list(filter(lambda arc: arc.src == src, arcs))
+        edges = net.get_directed_edges(src=src)
+        for edge in edges:
+            assert edge in expected
+        for arc in expected:
+            assert arc in edges
+
+    def test_get_directed_edges_from_single_target(self, net_t4_p3_a8):
+        net, trans, places, arcs = net_t4_p3_a8
+        target = places[-1]
+        expected = list(filter(lambda arc: arc.target == target, arcs))
+        edges = net.get_directed_edges(target=target)
+        for edge in edges:
+            assert edge in expected
+        for arc in expected:
+            assert arc in edges
+
+
 class TestAcceptingPetrinet:
     def test_iterable(self):
         pn = PetrinetFactory.new_petrinet('net_0')
