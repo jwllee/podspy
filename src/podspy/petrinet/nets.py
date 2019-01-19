@@ -157,7 +157,7 @@ class AbstractResetInhibitorNet(directed.AbstractDirectedGraph):
                 if existing == a:
                     existing.weight += weight
                     return existing
-        return None
+        return a
 
     def add_arc(self, src, target, weight=1):
         return self.add_arc_private(src, target, weight)
