@@ -14,8 +14,41 @@ import pandas as pd
 import numpy as np
 from pandas.testing import assert_frame_equal
 
+import pytest
+import functools as fct
+
 
 class TestPetrinet:
+    @pytest.fixture(
+        scope='function'
+    )
+    def net_t4_p3_a8(self):
+        net = PetrinetFactory.new_petrinet('net0')
+
+        t_a = net.add_transition('a')
+        t_b = net.add_transition('b')
+        t_c = net.add_transition('c')
+        t_d = net.add_transition('d')
+        trans = [t_a, t_b, t_c, t_d]
+
+        p_1 = net.add_place('p1')
+        p_2 = net.add_place('p2')
+        p_3 = net.add_place('p3')
+        places = [p_1, p_2, p_3]
+
+        arcs = [
+            net.add_arc(p_1, t_a),
+            net.add_arc(p_1, t_b),
+            net.add_arc(p_2, t_c),
+            net.add_arc(p_2, t_d),
+            net.add_arc(t_a, p_2),
+            net.add_arc(t_b, p_2),
+            net.add_arc(t_c, p_3),
+            net.add_arc(t_d, p_3)
+        ]
+
+        return net, trans, places, arcs
+
     def test_get_transition_relation_dfs(self):
         # make net
         net_label = 'net0'
@@ -77,6 +110,44 @@ class TestPetrinet:
         assert_frame_equal(p_to_t_df, expected_p_to_t_df)
         assert_frame_equal(t_to_p_df, expected_t_to_p_df)
 
+    def test_add_transition(self):
+        net = PetrinetFactory.new_petrinet('net0')
+        t_a = net.add_transition('a')
+        assert t_a is not None
+        assert t_a.label == 'a'
+
+    def test_add_place(self):
+        net = PetrinetFactory.new_petrinet('net0')
+        p_1 = net.add_place('p1')
+        assert p_1 is not None
+        assert p_1.label == 'p1'
+
+    def test_add_arc(self):
+        net = PetrinetFactory.new_petrinet('net0')
+        t_a = net.add_transition('a')
+        p_1 = net.add_place('p1')
+        arc = net.add_arc(p_1, t_a)
+        assert arc is not None
+        assert arc.src == p_1 and arc.target == t_a
+
+    def test_get_edges_from_all_nodes(self, net_t4_p3_a8):
+        net, trans, places, arcs = net_t4_p3_a8
+        edges = net.get_edges()
+        for arc in arcs:
+            assert arc in edges
+
+    def test_get_edges_from_some_nodes(self, net_t4_p3_a8):
+        net, trans, places, arcs = net_t4_p3_a8
+        first_2_trans = trans[:2]
+        expected = list(filter(lambda arc: arc.src in first_2_trans or arc.target in first_2_trans, arcs))
+        edges = net.get_edges(first_2_trans)
+        expected_str = fct.reduce(lambda x, e: x + ['({}, {})'.format(e.src.label, e.target.label)], expected, [])
+        edges_str = fct.reduce(lambda x, e: x + ['({},{})'.format(e.src.label, e.target.label)], edges, [])
+
+        for arc in expected:
+            assert arc in edges, '({},{}) not in {}'.format(arc.src.label, arc.target.label, edges_str)
+        for edge in edges:
+            assert edge in expected, '({},{}) not in {}'.format(edge.src.label, edge.target.label, expected_str)
 
 class TestAcceptingPetrinet:
     def test_iterable(self):
