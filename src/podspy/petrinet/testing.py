@@ -165,7 +165,10 @@ def assert_transition_equal(left, right,
                                 check_id, check_local_id,
                                 check_graph, check_attr, obj)
 
-    assert_attr_equal('is_invisible', left, right, obj)
+    if left.is_invisible != right.is_invisible:
+        msg1 = '{}, {}'.format(left.is_invisible, left.label)
+        msg2 = '{}, {}'.format(right.is_invisible, right.label)
+        raise_assert_detail(obj, 'Transition visibility are different', msg1, msg2)
 
 
 def assert_place_equal(left, right,

@@ -26,6 +26,15 @@ def test_assert_transition_equal_only_check_label():
     except AssertionError:
         pass
 
+    a2 = petri.Transition(graph, 'a', is_invisible=True)
+
+    try:
+        petri.testing.assert_transition_equal(a0, a2, check_id=False, check_local_id=False,
+                                              check_graph=False, check_attr=False)
+        pytest.fail('Should have raised assertion error on different transitions')
+    except AssertionError:
+        pass
+
 
 def test_assert_place_equal_only_check_label():
     graph = None
