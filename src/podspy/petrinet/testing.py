@@ -248,17 +248,26 @@ def _assert_abstract_reset_inhibitor_net_equal(left, right, check_label=True,
     assert_collection_len_equal('reset_arcs', left, right, 'label', obj)
     assert_collection_len_equal('inhibitor_arcs', left, right, 'label', obj)
 
-    for t_left, t_right in zip(left.transitions, right.transitions):
+    left_trans = sorted(left.transitions, key=lambda t: t.label)
+    right_trans = sorted(right.transitions, key=lambda t: t.label)
+
+    for t_left, t_right in zip(left_trans, right_trans):
         assert_transition_equal(t_left, t_right,
                                 check_id, check_local_id,
                                 check_graph, check_attr, '{obj} Transition'.format(obj=obj))
 
-    for p_left, p_right in zip(left.places, right.places):
+    left_places = sorted(left.places, key=lambda p: p.label)
+    right_places = sorted(right.places, key=lambda p: p.label)
+
+    for p_left, p_right in zip(left_places, right_places):
         assert_place_equal(p_left, p_right,
                            check_id, check_local_id,
                            check_graph, check_attr, '{obj} Place'.format(obj=obj))
 
-    for a_left, a_right in zip(left.arcs, right.arcs):
+    left_arcs = sorted(left.arcs, key=lambda a: '{},{}'.format(a.src.label, a.target.label))
+    right_arcs = sorted(right.arcs, key=lambda a: '{},{}'.format(a.src.label, a.target.label))
+
+    for a_left, a_right in zip(left_arcs, right_arcs):
         assert_arc_equal(a_left, a_right,
                          check_id, check_local_id,
                          check_graph, check_attr, '{obj} Arc'.format(obj=obj))

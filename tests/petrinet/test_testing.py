@@ -74,11 +74,15 @@ def test_assert_petrinet_equal_only_check_element_label():
     net1 = petri.PetrinetFactory.new_petrinet('n1')
 
     a0 = net0.add_transition('a')
+    b0 = net0.add_transition('b')
     p0 = net0.add_place('p')
     net0.add_arc(a0, p0)
+    net0.add_arc(p0, b0)
 
+    b1 = net1.add_transition('b')
     a1 = net1.add_transition('a')
     p1 = net1.add_place('p')
+    net1.add_arc(p1, b1)
     net1.add_arc(a1, p1)
 
     try:
