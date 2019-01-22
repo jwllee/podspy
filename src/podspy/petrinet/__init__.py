@@ -15,4 +15,3 @@ from .semantics import *
 from .drawing import *
 from .io import *
 from .factory import *
-from .testing import *
