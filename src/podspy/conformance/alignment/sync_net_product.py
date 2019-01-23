@@ -44,31 +44,31 @@ def to_trace_net(name, trace, place_labeller=None):
 
     init_marking = petri.Marking([src])
     final_marking = petri.Marking([to_place])
-    final_markings = [final_marking]
 
-    return petri.AcceptingPetrinet(net, init_marking, final_markings)
+    return net, init_marking, final_marking
 
 
-def to_sync_net_product(name, trace_apn, apn, mapping, namer=utils.default_snp_transition_namer):
+def to_sync_net_product(trace_net, trace_init, trace_final,
+                        net, init, final, mapping,
+                        label=None, namer=utils.default_snp_transition_namer):
     """Joins a trace net and model net to a synchronous net product
 
-    :param name: trace name
-    :param trace_apn: trace net
-    :param apn: model net
+    :param trace_net: trace net
+    :param trace_init: initial marking of trace net
+    :param trace_final: final marking of trace net
+    :param net: model net
+    :param init: initial marking of trace net
+    :param final: final marking of trace net
     :param mapping: mapping from net transitions to activity names
+    :param label: synchronous net product label
     :param namer: function that names different move transitions
     :return: synchronous net product
     """
-    assert isinstance(apn, petri.AcceptingPetrinet)
-    assert isinstance(trace_apn, petri.AcceptingPetrinet)
+    assert isinstance(trace_net, petri.Petrinet)
+    assert isinstance(net, petri.Petrinet)
 
-    # @todo: transform the nets with multiple final markings to a single final marking
-    assert len(trace_apn.final_markings) == 1, 'Only supporting single final markings'
-    assert len(apn.final_markings) == 1, 'Only supporting single final markings'
-
-    net = apn.net
-    trace_net = trace_apn.net
-    snp = petri.PetrinetFactory.new_petrinet('snp-{}'.format(name))
+    snp_label = label if label else 'snp-{}-{}'.format(trace_net.label, net.label)
+    snp = petri.PetrinetFactory.new_petrinet(snp_label)
 
     tran_map = dict()
     place_map = dict()
@@ -146,19 +146,17 @@ def to_sync_net_product(name, trace_apn, apn, mapping, namer=utils.default_snp_t
     init_marking_list = []
     final_marking_list = []
 
-    for p in apn.init_marking:
+    for p in trace_init:
         init_marking_list.append(place_map[p])
-    for p in trace_apn.init_marking:
+    for p in init:
         init_marking_list.append(place_map[p])
 
-    for p in list(apn.final_markings)[0]:
+    for p in trace_final:
         final_marking_list.append(place_map[p])
-    for p in list(trace_apn.final_markings)[0]:
+    for p in final:
         final_marking_list.append(place_map[p])
 
     init_marking = petri.Marking(init_marking_list)
     final_marking = petri.Marking(final_marking_list)
 
-    snp_apn = petri.PetrinetFactory.new_accepting_petrinet(snp, init_marking, {final_marking})
-
-    return snp_apn
+    return snp, init_marking, final_marking

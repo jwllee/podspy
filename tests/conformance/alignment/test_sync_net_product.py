@@ -46,9 +46,9 @@ def trace_net_l3():
     net.add_arc(t_c, sink)
 
     init_marking = petri.Marking([src])
-    final_markings = [petri.Marking([sink])]
+    final_marking = petri.Marking([sink])
 
-    return petri.PetrinetFactory.new_accepting_petrinet(net, init_marking, final_markings)
+    return net, init_marking, final_marking
 
 
 @pytest.fixture(
@@ -120,9 +120,8 @@ def model_cc_book():
 
     init_marking = petri.Marking([p0])
     final_marking = petri.Marking([p11])
-    apn = petri.PetrinetFactory.new_accepting_petrinet(net, init_marking, {final_marking})
 
-    return apn
+    return net, init_marking, final_marking
 
 
 @pytest.fixture(
@@ -148,8 +147,9 @@ def tran_ev_mapping_cc_book(model_cc_book):
 
     :return: mapping
     """
-    label_to_trans = {t.label:t for t in model_cc_book.net.transitions}
-    mapping = {t:t.label for t in model_cc_book.net.transitions}
+    net, init, final = model_cc_book
+    label_to_trans = {t.label:t for t in net.transitions}
+    mapping = {t:t.label for t in net.transitions}
     del mapping[label_to_trans['Da1']]
     del mapping[label_to_trans['Da2']]
     mapping[label_to_trans['Da1']] = 'Da'
@@ -305,50 +305,63 @@ def snp_cc_book(model_cc_book, trace_cc_book):
     init_marking = petri.Marking([p0, p12])
     final_marking = petri.Marking([p11, p19])
 
-    apn = petri.AcceptingPetrinet(net, init_marking, {final_marking})
+    return net, init_marking, final_marking
 
-    return apn
 
 def test_trace_to_trace_net(trace_l3, trace_net_l3):
     caseid = trace_l3[podspy.log.CASEID].values[0]
-    apn = alignment.to_trace_net(caseid, trace_l3[podspy.log.ACTIVITY])
+    net, init, final = alignment.to_trace_net(caseid, trace_l3[podspy.log.ACTIVITY])
+    expected_net, expected_init, expected_final = trace_net_l3
 
     try:
-        petri.testing.assert_petrinet_equal(apn.net, trace_net_l3.net, check_label=True,
+        petri.testing.assert_petrinet_equal(net, expected_net, check_label=True,
                                             check_id=False, check_local_id=False,
                                             check_graph=False, check_attr=False)
     except AssertionError:
         pytest.fail('Petrinets should be equal')
 
     # verify markings
-    assert len(apn.init_marking) == len(trace_net_l3.init_marking)
-    assert len(apn.final_markings) == len(trace_net_l3.final_markings)
+    assert len(init) == len(expected_init)
+    assert len(final) == len(expected_final)
+
+    init_place_labels = list(map(lambda p: p.label, init))
+    final_place_labels = list(map(lambda p: p.label, final))
+    expected_init_place_labels = list(map(lambda p: p.label, expected_init))
+    expected_final_place_labels = list(map(lambda p: p.label, expected_final))
+
+    assert sorted(init_place_labels) == sorted(expected_init_place_labels)
+    assert sorted(final_place_labels) == sorted(expected_final_place_labels)
 
 
 def test_to_sync_net_prod(model_cc_book, trace_cc_book, tran_ev_mapping_cc_book, snp_cc_book):
     caseid = trace_cc_book[podspy.log.CASEID].values[0]
     events = trace_cc_book[podspy.log.ACTIVITY]
     place_labeller = alignment.utils.label_generator(start_index=12)
-    trace_apn = alignment.to_trace_net(caseid, events, place_labeller)
 
-    snp = podspy.conformance.alignment.to_sync_net_product(caseid, trace_apn,
-                                               model_cc_book, tran_ev_mapping_cc_book)
+    trace_net, trace_init, trace_final = alignment.to_trace_net(caseid, events, place_labeller)
+    net, init, final = model_cc_book
+    expected_snp, expected_init, expected_final = snp_cc_book
+
+    snp_label = 'snp'
+    snp, snp_init, snp_final = alignment.to_sync_net_product(trace_net, trace_init, trace_final,
+                                                             net, init, final,
+                                                             tran_ev_mapping_cc_book, snp_label)
 
     try:
-        petri.testing.assert_petrinet_equal(snp.net, snp_cc_book.net, check_label=False,
+        petri.testing.assert_petrinet_equal(snp, expected_snp, check_label=False,
                                             check_id=False, check_local_id=False,
                                             check_graph=False, check_attr=False)
     except AssertionError:
         pytest.fail('Petrinets should be equal')
 
-    assert len(snp.init_marking) == len(snp_cc_book.init_marking)
-    assert len(snp.final_markings) == len(snp_cc_book.final_markings)
+    assert len(snp_init) == len(expected_init)
+    assert len(snp_final) == len(expected_final)
 
-    snp_init_marking_place_labels = list(map(lambda p: p.label, snp.init_marking))
-    expected_init_marking_place_labels = list(map(lambda p: p.label, snp_cc_book.init_marking))
+    snp_init_marking_place_labels = list(map(lambda p: p.label, snp_init))
+    expected_init_marking_place_labels = list(map(lambda p: p.label, expected_init))
 
-    snp_final_marking_place_labels = list(map(lambda p: p.label, list(snp.final_markings)[0]))
-    expected_final_marking_place_labels = list(map(lambda p: p.label, list(snp_cc_book.final_markings)[0]))
+    snp_final_marking_place_labels = list(map(lambda p: p.label, snp_final))
+    expected_final_marking_place_labels = list(map(lambda p: p.label, expected_final))
 
     assert sorted(snp_init_marking_place_labels) == sorted(expected_init_marking_place_labels)
     assert sorted(snp_final_marking_place_labels) == sorted(expected_final_marking_place_labels)
