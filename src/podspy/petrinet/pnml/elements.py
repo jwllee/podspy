@@ -457,7 +457,7 @@ class PnmlArc(PnmlBasicObject):
         if arc:
             edge_map[self._id] = arc
             # constant for STYLE_SPLINE = 13, todo: change to constant for graphviz
-            arc[attrib.STYLE] = 13
+            arc.attribs[attrib.STYLE] = 13
             super().convert_to_net(element=arc)
             for tool in self.tool_specific_list:
                 tool.convert_to_net(arc)
