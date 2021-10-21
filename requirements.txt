@@ -3,7 +3,7 @@ argh==0.26.2
 asn1crypto==0.24.0
 atomicwrites==1.2.1
 attrs==18.2.0
-Babel==2.6.0
+Babel==2.9.1
 bleach==3.0.2
 bumpversion==0.5.3
 certifi==2018.11.29
