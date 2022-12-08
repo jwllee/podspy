@@ -6,7 +6,7 @@ attrs==18.2.0
 Babel==2.6.0
 bleach==3.0.2
 bumpversion==0.5.3
-certifi==2018.11.29
+certifi==2022.12.7
 cffi==1.11.5
 chardet==3.0.4
 ciso8601==2.1.1
